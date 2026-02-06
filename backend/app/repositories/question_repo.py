@@ -26,6 +26,10 @@ def create_question(
     return question
 
 
+def get_question_by_id(session: Session, *, question_id) -> Question | None:
+    return session.get(Question, question_id)
+
+
 def list_questions(session: Session, *, limit: int = 20, offset: int = 0) -> list[Question]:
     stmt = (
         select(Question)
