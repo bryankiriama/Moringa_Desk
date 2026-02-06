@@ -6,6 +6,7 @@ from backend.app.api.follows import router as follows_router
 from backend.app.api.health import router as health_router
 from backend.app.api.notifications import router as notifications_router
 from backend.app.api.questions import router as questions_router
+from backend.app.api.related_questions import router as related_router
 from backend.app.api.tags import router as tags_router
 from backend.app.api.votes import router as votes_router
 
@@ -19,3 +20,4 @@ app.include_router(votes_router)
 app.include_router(tags_router)
 app.include_router(follows_router)
 app.include_router(notifications_router)
+app.include_router(related_router)
