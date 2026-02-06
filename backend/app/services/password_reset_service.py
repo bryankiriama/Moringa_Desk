@@ -42,3 +42,20 @@ def verify_reset_token(session: Session, *, token: str) -> User | None:
         return None
 
     return session.get(User, record.user_id)
+
+
+def consume_reset_token(session: Session, *, token: str) -> User | None:
+    token_hash = _hash_token(token)
+    stmt = select(PasswordResetToken).where(PasswordResetToken.token_hash == token_hash)
+    record = session.scalars(stmt).first()
+    if record is None:
+        return None
+
+    if record.expires_at <= datetime.now(tz=timezone.utc):
+        return None
+
+    user = session.get(User, record.user_id)
+    session.delete(record)
+    session.commit()
+
+    return user
