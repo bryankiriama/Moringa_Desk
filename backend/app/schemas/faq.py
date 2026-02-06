@@ -1,0 +1,20 @@
+import uuid
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class FAQCreate(BaseModel):
+    question: str = Field(min_length=10)
+    answer: str = Field(min_length=20)
+
+
+class FAQOut(BaseModel):
+    id: uuid.UUID
+    question: str
+    answer: str
+    created_by: uuid.UUID | None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
