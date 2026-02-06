@@ -34,3 +34,15 @@ def list_questions(session: Session, *, limit: int = 20, offset: int = 0) -> lis
         .offset(offset)
     )
     return list(session.scalars(stmt).all())
+
+
+def search_questions_by_title(
+    session: Session, *, title: str, limit: int = 5
+) -> list[Question]:
+    stmt = (
+        select(Question)
+        .where(Question.title.ilike(f"%{title}%"))
+        .order_by(Question.created_at.desc())
+        .limit(limit)
+    )
+    return list(session.scalars(stmt).all())

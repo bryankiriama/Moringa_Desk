@@ -4,7 +4,11 @@ from sqlalchemy.orm import Session
 from backend.app.core.deps import get_current_user
 from backend.app.db.session import get_db
 from backend.app.models.user import User
-from backend.app.repositories.question_repo import create_question, list_questions
+from backend.app.repositories.question_repo import (
+    create_question,
+    list_questions,
+    search_questions_by_title,
+)
 from backend.app.schemas.question import QuestionCreate, QuestionOut
 
 router = APIRouter(prefix="/questions", tags=["questions"])
@@ -34,3 +38,14 @@ def list_questions_endpoint(
     db: Session = Depends(get_db),
 ) -> list[QuestionOut]:
     return list_questions(db, limit=limit, offset=offset)
+
+
+@router.get("/duplicates", response_model=list[QuestionOut])
+def duplicate_questions_endpoint(
+    title: str,
+    db: Session = Depends(get_db),
+) -> list[QuestionOut]:
+    if len(title) < 10:
+        return []
+
+    return search_questions_by_title(db, title=title, limit=5)
