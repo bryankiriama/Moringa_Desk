@@ -9,6 +9,10 @@ def get_user_by_email(session: Session, email: str) -> User | None:
     return session.scalars(stmt).first()
 
 
+def get_user_by_id(session: Session, user_id) -> User | None:
+    return session.get(User, user_id)
+
+
 def create_user(
     session: Session,
     *,
