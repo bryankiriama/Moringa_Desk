@@ -1,4 +1,5 @@
 from backend.app.models.answer import Answer
+from backend.app.models.follow import Follow
 from backend.app.models.password_reset import PasswordResetToken
 from backend.app.models.question import Question
 from backend.app.models.question_tag import QuestionTag
@@ -14,4 +15,5 @@ __all__ = [
     "Vote",
     "Tag",
     "QuestionTag",
+    "Follow",
 ]
