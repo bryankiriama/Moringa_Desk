@@ -18,3 +18,10 @@ curl http://127.0.0.1:8000/health
 Config
 
 See `backend/.env.example` for the expected environment variables.
+
+Tests
+
+```bash
+python -m pip install -e .[dev]
+pytest
+```
