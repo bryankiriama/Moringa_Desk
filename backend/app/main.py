@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from backend.app.api.answers import router as answers_router
 from backend.app.api.auth import router as auth_router
+from backend.app.api.faqs import router as faqs_router
 from backend.app.api.follows import router as follows_router
 from backend.app.api.health import router as health_router
 from backend.app.api.notifications import router as notifications_router
@@ -21,3 +22,4 @@ app.include_router(tags_router)
 app.include_router(follows_router)
 app.include_router(notifications_router)
 app.include_router(related_router)
+app.include_router(faqs_router)
