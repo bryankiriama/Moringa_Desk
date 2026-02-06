@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class QuestionCreate(BaseModel):
@@ -21,3 +21,5 @@ class QuestionOut(BaseModel):
     accepted_answer_id: uuid.UUID | None
     created_at: datetime
     updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
