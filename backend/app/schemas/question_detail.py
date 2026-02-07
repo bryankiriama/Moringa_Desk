@@ -4,6 +4,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 from backend.app.schemas.answer import AnswerOut
+from backend.app.schemas.tag import TagOut
 
 
 class QuestionDetailOut(BaseModel):
@@ -17,5 +18,6 @@ class QuestionDetailOut(BaseModel):
     created_at: datetime
     updated_at: datetime
     answers: list[AnswerOut]
+    tags: list[TagOut]
 
     model_config = ConfigDict(from_attributes=True)

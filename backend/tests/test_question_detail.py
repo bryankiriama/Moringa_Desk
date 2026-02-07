@@ -7,6 +7,8 @@ from fastapi.testclient import TestClient
 from backend.app.db.base import Base
 from backend.app.repositories.answer_repo import create_answer
 from backend.app.repositories.question_repo import create_question
+from backend.app.repositories.question_tag_repo import attach_tags
+from backend.app.repositories.tag_repo import create_tag
 
 
 def setup_app_with_sqlite():
@@ -39,7 +41,7 @@ def test_get_question_not_found() -> None:
     assert response.status_code == 404
 
 
-def test_get_question_found_with_answers_ordered() -> None:
+def test_get_question_found_with_answers_and_tags_ordered() -> None:
     client, session_module = setup_app_with_sqlite()
 
     with session_module.SessionLocal() as session:
@@ -65,12 +67,21 @@ def test_get_question_found_with_answers_ordered() -> None:
         )
         a2.is_accepted = True
         question.accepted_answer_id = a2.id
+
+        t1 = create_tag(session, name="Python")
+        t2 = create_tag(session, name="DevOps")
+        attach_tags(session, question_id=question.id, tag_ids=[t1.id, t2.id])
         session.commit()
 
     response = client.get(f"/questions/{question.id}")
     assert response.status_code == 200
     data = response.json()
+
     assert "answers" in data
     assert len(data["answers"]) == 2
     assert data["answers"][0]["id"] == str(a2.id)
     assert data["answers"][1]["id"] == str(a1.id)
+
+    assert "tags" in data
+    names = [t["name"] for t in data["tags"]]
+    assert names == ["devops", "python"]
