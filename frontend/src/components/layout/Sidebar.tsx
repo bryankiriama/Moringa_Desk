@@ -18,7 +18,7 @@ const studentItems: SidebarItem[] = [
   { label: "Dashboard", to: "/dashboard", match: ["/dashboard"] },
   { label: "Questions", to: "/questions", match: ["/questions"] },
   { label: "Ask Question", to: "/questions/ask", match: ["/questions/ask"] },
-  { label: "Trending" },
+  { label: "Trending", to: "/trending", match: ["/trending"] },
   { label: "Notifications", to: "/notifications", match: ["/notifications"] },
 ];
 
@@ -26,7 +26,7 @@ const adminItems: SidebarItem[] = [
   { label: "Dashboard", to: "/admin/dashboard", match: ["/admin/dashboard"] },
   { label: "Questions", to: "/questions", match: ["/questions"] },
   { label: "Ask Question", to: "/questions/ask", match: ["/questions/ask"] },
-  { label: "Trending" },
+  { label: "Trending", to: "/trending", match: ["/trending"] },
   { label: "Notifications", to: "/notifications", match: ["/notifications"] },
   { label: "Users", to: "/admin/users", match: ["/admin/users"] },
   { label: "Manage Tags", to: "/admin/tags", match: ["/admin/tags"] },
