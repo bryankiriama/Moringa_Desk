@@ -12,6 +12,7 @@ from backend.app.repositories.question_repo import (
     search_questions_by_title,
 )
 from backend.app.repositories.question_tag_repo import list_tags_for_question
+from backend.app.repositories.related_question_repo import list_related_questions
 from backend.app.schemas.question import QuestionCreate, QuestionOut
 from backend.app.schemas.question_detail import QuestionDetailOut
 
@@ -68,6 +69,7 @@ def get_question_endpoint(
 
     answers = list_answers_for_question_ordered(db, question_id=question_id)
     tags = list_tags_for_question(db, question_id=question_id)
+    related = list_related_questions(db, question_id=question_id)
 
     return QuestionDetailOut(
         id=question.id,
@@ -81,4 +83,5 @@ def get_question_endpoint(
         updated_at=question.updated_at,
         answers=answers,
         tags=tags,
+        related_questions=related,
     )

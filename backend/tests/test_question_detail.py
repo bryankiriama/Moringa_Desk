@@ -8,6 +8,7 @@ from backend.app.db.base import Base
 from backend.app.repositories.answer_repo import create_answer
 from backend.app.repositories.question_repo import create_question
 from backend.app.repositories.question_tag_repo import attach_tags
+from backend.app.repositories.related_question_repo import add_related_questions
 from backend.app.repositories.tag_repo import create_tag
 
 
@@ -26,6 +27,9 @@ def setup_app_with_sqlite():
     answers_module = importlib.import_module("backend.app.api.answers")
     importlib.reload(answers_module)
 
+    related_module = importlib.import_module("backend.app.api.related_questions")
+    importlib.reload(related_module)
+
     Base.metadata.create_all(bind=session_module.engine)
 
     main_module = importlib.import_module("backend.app.main")
@@ -41,7 +45,7 @@ def test_get_question_not_found() -> None:
     assert response.status_code == 404
 
 
-def test_get_question_found_with_answers_and_tags_ordered() -> None:
+def test_get_question_found_with_answers_tags_related_ordered() -> None:
     client, session_module = setup_app_with_sqlite()
 
     with session_module.SessionLocal() as session:
@@ -53,6 +57,23 @@ def test_get_question_found_with_answers_and_tags_ordered() -> None:
             category="Python",
             stage="Foundation",
         )
+        related1 = create_question(
+            session,
+            author_id=uuid.uuid4(),
+            title="Related question one title",
+            body="Related question one body is long enough for validation.",
+            category="Python",
+            stage="Foundation",
+        )
+        related2 = create_question(
+            session,
+            author_id=uuid.uuid4(),
+            title="Related question two title",
+            body="Related question two body is long enough for validation.",
+            category="Python",
+            stage="Foundation",
+        )
+
         a1 = create_answer(
             session,
             question_id=question.id,
@@ -71,6 +92,12 @@ def test_get_question_found_with_answers_and_tags_ordered() -> None:
         t1 = create_tag(session, name="Python")
         t2 = create_tag(session, name="DevOps")
         attach_tags(session, question_id=question.id, tag_ids=[t1.id, t2.id])
+
+        add_related_questions(
+            session,
+            question_id=question.id,
+            related_question_ids=[related1.id, related2.id],
+        )
         session.commit()
 
     response = client.get(f"/questions/{question.id}")
@@ -85,3 +112,7 @@ def test_get_question_found_with_answers_and_tags_ordered() -> None:
     assert "tags" in data
     names = [t["name"] for t in data["tags"]]
     assert names == ["devops", "python"]
+
+    assert "related_questions" in data
+    related_ids = [q["id"] for q in data["related_questions"]]
+    assert related_ids == [str(related2.id), str(related1.id)]
