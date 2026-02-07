@@ -4,6 +4,9 @@ import AdminLayout from "../layouts/AdminLayout";
 import AppLayout from "../layouts/AppLayout";
 import PublicLayout from "../layouts/PublicLayout";
 import AdminDashboard from "../pages/AdminDashboard";
+import AdminFaqs from "../pages/AdminFaqs";
+import AdminTags from "../pages/AdminTags";
+import AdminUsers from "../pages/AdminUsers";
 import AskQuestion from "../pages/AskQuestion";
 import Dashboard from "../pages/Dashboard";
 import Login from "../pages/Login";
@@ -34,6 +37,9 @@ const AppRouter = () => {
 
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="tags" element={<AdminTags />} />
+            <Route path="faqs" element={<AdminFaqs />} />
           </Route>
         </Route>
       </Routes>
