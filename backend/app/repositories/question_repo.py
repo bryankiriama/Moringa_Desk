@@ -40,6 +40,15 @@ def list_questions(session: Session, *, limit: int = 20, offset: int = 0) -> lis
     return list(session.scalars(stmt).all())
 
 
+def list_questions_by_author(session: Session, *, author_id) -> list[Question]:
+    stmt = (
+        select(Question)
+        .where(Question.author_id == author_id)
+        .order_by(Question.created_at.desc())
+    )
+    return list(session.scalars(stmt).all())
+
+
 def search_questions_by_title(
     session: Session, *, title: str, limit: int = 5
 ) -> list[Question]:

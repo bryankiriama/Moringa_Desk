@@ -36,3 +36,12 @@ def list_answers_for_question_ordered(
     accepted = [a for a in answers if a.is_accepted]
     non_accepted = [a for a in answers if not a.is_accepted]
     return accepted + non_accepted
+
+
+def list_answers_by_author(session: Session, *, author_id) -> list[Answer]:
+    stmt = (
+        select(Answer)
+        .where(Answer.author_id == author_id)
+        .order_by(Answer.created_at.desc())
+    )
+    return list(session.scalars(stmt).all())
