@@ -1,11 +1,8 @@
-import type { ReactNode } from "react";
+import type { TagChipData } from "../../types";
 
 type TagChipSize = "sm" | "md";
 
-type TagChipProps = {
-  label: string;
-  active?: boolean;
-  icon?: ReactNode;
+type TagChipProps = TagChipData & {
   onClick?: () => void;
   className?: string;
   size?: TagChipSize;

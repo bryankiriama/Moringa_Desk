@@ -1,23 +1,16 @@
 import Badge from "../components/ui/Badge";
+import EmptyState from "../components/ui/EmptyState";
 import NotificationItem from "../components/ui/NotificationItem";
 import SectionCard from "../components/ui/SectionCard";
 import TagChip from "../components/ui/TagChip";
-import type { Notification } from "../types";
+import type { NotificationItemData, TagChipData } from "../types";
 
-const tabs = [
+const tabs: TagChipData[] = [
   { label: "All Notifications", active: true },
   { label: "Unread (3)" },
 ];
 
-type NotificationCardData = {
-  notification: Notification;
-  title: string;
-  message: string;
-  time: string;
-  isNew?: boolean;
-};
-
-const notifications: NotificationCardData[] = [
+const notifications: NotificationItemData[] = [
   {
     notification: {
       id: "n-100",
@@ -114,11 +107,18 @@ const Notifications = () => {
       </div>
 
       <SectionCard>
-        <div className="space-y-4">
-          {notifications.map((item) => (
-            <NotificationItem key={item.notification.id} {...item} />
-          ))}
-        </div>
+        {notifications.length === 0 ? (
+          <EmptyState
+            title="You're all caught up"
+            description="We'll let you know when new activity happens."
+          />
+        ) : (
+          <div className="space-y-4">
+            {notifications.map((item) => (
+              <NotificationItem key={item.notification.id} {...item} />
+            ))}
+          </div>
+        )}
       </SectionCard>
 
       <div className="flex items-center justify-end">

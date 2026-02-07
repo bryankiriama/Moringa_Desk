@@ -1,29 +1,8 @@
-import type { ReactNode } from "react";
-
-import type { Question, Tag } from "../../types";
+import type { QuestionCardData } from "../../types";
 import Badge from "./Badge";
 import TagChip from "./TagChip";
 
-type QuestionMeta = {
-  author: string;
-  time: string;
-};
-
-type QuestionStats = {
-  answers: number;
-  views: number;
-  votes?: number;
-};
-
-type QuestionCardProps = {
-  question: Question;
-  tags: Tag[];
-  meta: QuestionMeta;
-  stats: QuestionStats;
-  statusLabel?: string;
-  statusVariant?: "success" | "warning" | "neutral" | "accent" | "info" | "danger";
-  leading?: ReactNode;
-  action?: ReactNode;
+type QuestionCardProps = QuestionCardData & {
   href?: string;
   onClick?: () => void;
   className?: string;

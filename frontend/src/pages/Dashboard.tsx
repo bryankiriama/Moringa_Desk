@@ -2,9 +2,9 @@ import Badge from "../components/ui/Badge";
 import MetricCard from "../components/ui/MetricCard";
 import QuestionCard from "../components/ui/QuestionCard";
 import SectionCard from "../components/ui/SectionCard";
-import type { Question, Tag } from "../types";
+import type { MetricCardData, QuestionCardData } from "../types";
 
-const metrics = [
+const metrics: MetricCardData[] = [
   {
     title: "Total Questions",
     value: "1,247",
@@ -74,15 +74,6 @@ const contributors = [
     color: "bg-emerald-500",
   },
 ];
-
-type QuestionCardData = {
-  question: Question;
-  tags: Tag[];
-  meta: { author: string; time: string };
-  stats: { answers: number; views: number; votes?: number };
-  statusLabel?: string;
-  statusVariant?: "success" | "warning" | "neutral" | "accent" | "info" | "danger";
-};
 
 const unansweredQuestions: QuestionCardData[] = [
   {

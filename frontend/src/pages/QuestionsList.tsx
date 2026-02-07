@@ -1,16 +1,17 @@
 import Badge from "../components/ui/Badge";
+import EmptyState from "../components/ui/EmptyState";
 import Pagination from "../components/ui/Pagination";
 import QuestionCard from "../components/ui/QuestionCard";
 import TagChip from "../components/ui/TagChip";
-import type { Question, Tag } from "../types";
+import type { QuestionCardData, TagChipData } from "../types";
 
-const filters = [
+const filters: TagChipData[] = [
   { label: "Newest", active: true },
   { label: "Most Votes" },
   { label: "Unanswered" },
 ];
 
-const tagFilters = [
+const tagFilters: TagChipData[] = [
   { label: "All", active: true },
   { label: "React" },
   { label: "Python" },
@@ -19,15 +20,6 @@ const tagFilters = [
   { label: "DevOps" },
   { label: "API" },
 ];
-
-type QuestionCardData = {
-  question: Question;
-  tags: Tag[];
-  meta: { author: string; time: string };
-  stats: { answers: number; views: number; votes?: number };
-  statusLabel?: string;
-  statusVariant?: "success" | "warning" | "neutral" | "accent" | "info" | "danger";
-};
 
 const questions: QuestionCardData[] = [
   {
@@ -158,15 +150,23 @@ const QuestionsList = () => {
         ))}
       </div>
 
-      <div className="space-y-5">
-        {questions.map((question) => (
-          <QuestionCard
-            key={question.question.id}
-            {...question}
-            leading={<span className="text-sm font-semibold">{question.stats.votes}</span>}
-          />
-        ))}
-      </div>
+      {questions.length === 0 ? (
+        <EmptyState
+          title="No questions yet"
+          description="New questions will appear here once the community starts posting."
+          actionLabel="Start by asking"
+        />
+      ) : (
+        <div className="space-y-5">
+          {questions.map((question) => (
+            <QuestionCard
+              key={question.question.id}
+              {...question}
+              leading={<span className="text-sm font-semibold">{question.stats.votes}</span>}
+            />
+          ))}
+        </div>
+      )}
 
       <div className="flex items-center justify-center">
         <Pagination currentPage={1} totalPages={3} />

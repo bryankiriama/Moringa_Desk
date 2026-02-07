@@ -1,14 +1,6 @@
-import type { ReactNode } from "react";
+import type { MetricCardData } from "../../types";
 
-type MetricCardProps = {
-  title: string;
-  value: string;
-  delta?: string;
-  deltaPositive?: boolean;
-  icon?: ReactNode;
-  accent?: "indigo" | "emerald" | "sky" | "amber" | "slate";
-  className?: string;
-};
+type MetricCardProps = MetricCardData;
 
 const accentStyles: Record<NonNullable<MetricCardProps["accent"]>, string> = {
   indigo: "bg-indigo-50 text-indigo-600",
