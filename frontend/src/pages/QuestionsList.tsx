@@ -1,4 +1,5 @@
 import Badge from "../components/ui/Badge";
+import EmptyState from "../components/ui/EmptyState";
 import Pagination from "../components/ui/Pagination";
 import QuestionCard from "../components/ui/QuestionCard";
 import TagChip from "../components/ui/TagChip";
@@ -149,15 +150,23 @@ const QuestionsList = () => {
         ))}
       </div>
 
-      <div className="space-y-5">
-        {questions.map((question) => (
-          <QuestionCard
-            key={question.question.id}
-            {...question}
-            leading={<span className="text-sm font-semibold">{question.stats.votes}</span>}
-          />
-        ))}
-      </div>
+      {questions.length === 0 ? (
+        <EmptyState
+          title="No questions yet"
+          description="New questions will appear here once the community starts posting."
+          actionLabel="Start by asking"
+        />
+      ) : (
+        <div className="space-y-5">
+          {questions.map((question) => (
+            <QuestionCard
+              key={question.question.id}
+              {...question}
+              leading={<span className="text-sm font-semibold">{question.stats.votes}</span>}
+            />
+          ))}
+        </div>
+      )}
 
       <div className="flex items-center justify-center">
         <Pagination currentPage={1} totalPages={3} />

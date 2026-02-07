@@ -1,4 +1,5 @@
 import Badge from "../components/ui/Badge";
+import EmptyState from "../components/ui/EmptyState";
 import SectionCard from "../components/ui/SectionCard";
 import type { User } from "../types";
 
@@ -95,43 +96,51 @@ const AdminUsers = () => {
           </button>
         }
       >
-        <div className="overflow-x-auto">
-          <div className="min-w-[720px] space-y-4">
-            <div className="grid grid-cols-[2fr,1fr,1fr,1fr,1fr] gap-4 text-xs uppercase tracking-wide text-slate-400">
-              <span>User</span>
-              <span>Role</span>
-              <span>Questions</span>
-              <span>Answers</span>
-              <span>Actions</span>
-            </div>
-            {users.map((user) => (
-              <div
-                key={user.email}
-                className="grid grid-cols-[2fr,1fr,1fr,1fr,1fr] items-center gap-4 border-t border-slate-100 pt-4 text-sm"
-              >
-                <div>
-                  <p className="font-semibold text-slate-900">{user.full_name}</p>
-                  <p className="text-xs text-slate-500">{user.email}</p>
-                </div>
-                <Badge
-                  label={user.role}
-                  variant={roleVariant(user.role)}
-                  className="capitalize"
-                />
-                <span className="text-slate-600">{user.questions}</span>
-                <span className="text-slate-600">{user.answers}</span>
-                <div className="flex items-center gap-3 text-slate-400">
-                  <button type="button" className="rounded-md text-sm text-slate-500 focus-ring">
-                    Edit
-                  </button>
-                  <button type="button" className="rounded-md text-sm text-rose-500 focus-ring">
-                    Remove
-                  </button>
-                </div>
+        {users.length === 0 ? (
+          <EmptyState
+            title="No users yet"
+            description="Invited users will show up here once they accept."
+            actionLabel="Invite user"
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <div className="min-w-[720px] space-y-4">
+              <div className="grid grid-cols-[2fr,1fr,1fr,1fr,1fr] gap-4 text-xs uppercase tracking-wide text-slate-400">
+                <span>User</span>
+                <span>Role</span>
+                <span>Questions</span>
+                <span>Answers</span>
+                <span>Actions</span>
               </div>
-            ))}
+              {users.map((user) => (
+                <div
+                  key={user.email}
+                  className="grid grid-cols-[2fr,1fr,1fr,1fr,1fr] items-center gap-4 border-t border-slate-100 pt-4 text-sm"
+                >
+                  <div>
+                    <p className="font-semibold text-slate-900">{user.full_name}</p>
+                    <p className="text-xs text-slate-500">{user.email}</p>
+                  </div>
+                  <Badge
+                    label={user.role}
+                    variant={roleVariant(user.role)}
+                    className="capitalize"
+                  />
+                  <span className="text-slate-600">{user.questions}</span>
+                  <span className="text-slate-600">{user.answers}</span>
+                  <div className="flex items-center gap-3 text-slate-400">
+                    <button type="button" className="rounded-md text-sm text-slate-500 focus-ring">
+                      Edit
+                    </button>
+                    <button type="button" className="rounded-md text-sm text-rose-500 focus-ring">
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </SectionCard>
     </div>
   );

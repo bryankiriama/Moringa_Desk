@@ -1,4 +1,5 @@
 import Badge from "../components/ui/Badge";
+import EmptyState from "../components/ui/EmptyState";
 import NotificationItem from "../components/ui/NotificationItem";
 import SectionCard from "../components/ui/SectionCard";
 import TagChip from "../components/ui/TagChip";
@@ -106,11 +107,18 @@ const Notifications = () => {
       </div>
 
       <SectionCard>
-        <div className="space-y-4">
-          {notifications.map((item) => (
-            <NotificationItem key={item.notification.id} {...item} />
-          ))}
-        </div>
+        {notifications.length === 0 ? (
+          <EmptyState
+            title="You're all caught up"
+            description="We'll let you know when new activity happens."
+          />
+        ) : (
+          <div className="space-y-4">
+            {notifications.map((item) => (
+              <NotificationItem key={item.notification.id} {...item} />
+            ))}
+          </div>
+        )}
       </SectionCard>
 
       <div className="flex items-center justify-end">

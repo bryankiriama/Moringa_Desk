@@ -1,4 +1,5 @@
 import Badge from "../components/ui/Badge";
+import EmptyState from "../components/ui/EmptyState";
 import SectionCard from "../components/ui/SectionCard";
 import TagChip from "../components/ui/TagChip";
 import type { Tag } from "../types";
@@ -88,29 +89,37 @@ const AdminTags = () => {
       </SectionCard>
 
       <SectionCard title="All Tags" subtitle="5 tags total">
-        <div className="space-y-4">
-          {tags.map((tag) => (
-            <div
-              key={tag.id}
-              className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4"
-            >
-              <div className="flex items-center gap-3">
-                <TagChip label={tag.name} />
-                <span className="text-sm text-slate-500">
-                  Used in {tag.usage_count} questions
-                </span>
+        {tags.length === 0 ? (
+          <EmptyState
+            title="No tags created"
+            description="Create tags to help organize questions."
+            actionLabel="Add tag"
+          />
+        ) : (
+          <div className="space-y-4">
+            {tags.map((tag) => (
+              <div
+                key={tag.id}
+                className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4"
+              >
+                <div className="flex items-center gap-3">
+                  <TagChip label={tag.name} />
+                  <span className="text-sm text-slate-500">
+                    Used in {tag.usage_count} questions
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-slate-400">
+                  <button type="button" className="rounded-md text-slate-500 focus-ring">
+                    Edit
+                  </button>
+                  <button type="button" className="rounded-md text-rose-500 focus-ring">
+                    Delete
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-3 text-sm text-slate-400">
-                <button type="button" className="rounded-md text-slate-500 focus-ring">
-                  Edit
-                </button>
-                <button type="button" className="rounded-md text-rose-500 focus-ring">
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </SectionCard>
     </div>
   );
