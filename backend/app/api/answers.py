@@ -104,4 +104,16 @@ def accept_answer_endpoint(
             status_code=status.HTTP_404_NOT_FOUND, detail="question not found"
         )
 
+    if result.answer.author_id != current_user.id:
+        create_notification(
+            db,
+            user_id=result.answer.author_id,
+            type="accepted_answer",
+            payload={
+                "question_id": str(result.question.id),
+                "answer_id": str(result.answer.id),
+                "actor_id": str(current_user.id),
+            },
+        )
+
     return {"detail": "accepted"}
