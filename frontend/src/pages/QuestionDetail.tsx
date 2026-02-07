@@ -2,9 +2,9 @@ import Badge from "../components/ui/Badge";
 import QuestionCard from "../components/ui/QuestionCard";
 import SectionCard from "../components/ui/SectionCard";
 import TagChip from "../components/ui/TagChip";
-import type { Answer, Question, Tag } from "../types";
+import type { Answer, QuestionCardData, Tag } from "../types";
 
-const question = {
+const question: QuestionCardData = {
   question: {
     id: "q-400",
     author_id: "u-500",
@@ -17,7 +17,7 @@ const question = {
     created_at: "2024-01-30T07:30:00Z",
     updated_at: "2024-01-30T07:30:00Z",
     vote_score: 24,
-  } satisfies Question,
+  },
   tags: [
     { id: "t-python", name: "Python", created_at: "2024-01-01T00:00:00Z" },
     { id: "t-django", name: "Django", created_at: "2024-01-01T00:00:00Z" },
@@ -84,15 +84,6 @@ const answers: AnswerCardData[] = [
     time: "1 hour ago",
   },
 ];
-
-type QuestionCardData = {
-  question: Question;
-  tags: Tag[];
-  meta: { author: string; time: string };
-  stats: { answers: number; views: number; votes?: number };
-  statusLabel?: string;
-  statusVariant?: "success" | "warning" | "neutral" | "accent" | "info" | "danger";
-};
 
 const relatedQuestions: QuestionCardData[] = [
   {

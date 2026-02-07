@@ -1,13 +1,6 @@
 import type { ReactNode } from "react";
 
-type BadgeVariant =
-  | "success"
-  | "warning"
-  | "danger"
-  | "info"
-  | "neutral"
-  | "accent"
-  | "outline";
+import type { BadgeVariant } from "../../types";
 
 type BadgeSize = "sm" | "md";
 

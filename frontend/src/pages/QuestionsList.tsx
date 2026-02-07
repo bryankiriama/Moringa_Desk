@@ -2,15 +2,15 @@ import Badge from "../components/ui/Badge";
 import Pagination from "../components/ui/Pagination";
 import QuestionCard from "../components/ui/QuestionCard";
 import TagChip from "../components/ui/TagChip";
-import type { Question, Tag } from "../types";
+import type { QuestionCardData, TagChipData } from "../types";
 
-const filters = [
+const filters: TagChipData[] = [
   { label: "Newest", active: true },
   { label: "Most Votes" },
   { label: "Unanswered" },
 ];
 
-const tagFilters = [
+const tagFilters: TagChipData[] = [
   { label: "All", active: true },
   { label: "React" },
   { label: "Python" },
@@ -19,15 +19,6 @@ const tagFilters = [
   { label: "DevOps" },
   { label: "API" },
 ];
-
-type QuestionCardData = {
-  question: Question;
-  tags: Tag[];
-  meta: { author: string; time: string };
-  stats: { answers: number; views: number; votes?: number };
-  statusLabel?: string;
-  statusVariant?: "success" | "warning" | "neutral" | "accent" | "info" | "danger";
-};
 
 const questions: QuestionCardData[] = [
   {

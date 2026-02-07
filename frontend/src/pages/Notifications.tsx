@@ -2,22 +2,14 @@ import Badge from "../components/ui/Badge";
 import NotificationItem from "../components/ui/NotificationItem";
 import SectionCard from "../components/ui/SectionCard";
 import TagChip from "../components/ui/TagChip";
-import type { Notification } from "../types";
+import type { NotificationItemData, TagChipData } from "../types";
 
-const tabs = [
+const tabs: TagChipData[] = [
   { label: "All Notifications", active: true },
   { label: "Unread (3)" },
 ];
 
-type NotificationCardData = {
-  notification: Notification;
-  title: string;
-  message: string;
-  time: string;
-  isNew?: boolean;
-};
-
-const notifications: NotificationCardData[] = [
+const notifications: NotificationItemData[] = [
   {
     notification: {
       id: "n-100",

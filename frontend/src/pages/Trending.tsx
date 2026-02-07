@@ -2,17 +2,9 @@ import Badge from "../components/ui/Badge";
 import QuestionCard from "../components/ui/QuestionCard";
 import SectionCard from "../components/ui/SectionCard";
 import TagChip from "../components/ui/TagChip";
-import type { Question, Tag } from "../types";
+import type { QuestionCardData } from "../types";
 
-type TrendingQuestion = {
-  rank: string;
-  trendScore: number;
-  question: Question;
-  tags: Tag[];
-  stats: { answers: number; views: number; votes?: number };
-  statusLabel?: string;
-  statusVariant?: "success" | "warning" | "neutral" | "accent" | "info" | "danger";
-};
+type TrendingQuestion = QuestionCardData & { rank: string; trendScore: number };
 
 const trendingQuestions: TrendingQuestion[] = [
   {
