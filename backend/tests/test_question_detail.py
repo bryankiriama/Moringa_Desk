@@ -5,6 +5,7 @@ import uuid
 from fastapi.testclient import TestClient
 
 from backend.app.db.base import Base
+from backend.app.repositories.answer_repo import create_answer
 from backend.app.repositories.question_repo import create_question
 
 
@@ -19,6 +20,9 @@ def setup_app_with_sqlite():
 
     questions_module = importlib.import_module("backend.app.api.questions")
     importlib.reload(questions_module)
+
+    answers_module = importlib.import_module("backend.app.api.answers")
+    importlib.reload(answers_module)
 
     Base.metadata.create_all(bind=session_module.engine)
 
@@ -35,7 +39,7 @@ def test_get_question_not_found() -> None:
     assert response.status_code == 404
 
 
-def test_get_question_found() -> None:
+def test_get_question_found_with_answers_ordered() -> None:
     client, session_module = setup_app_with_sqlite()
 
     with session_module.SessionLocal() as session:
@@ -47,7 +51,26 @@ def test_get_question_found() -> None:
             category="Python",
             stage="Foundation",
         )
+        a1 = create_answer(
+            session,
+            question_id=question.id,
+            author_id=uuid.uuid4(),
+            body="This is a helpful answer that explains the solution clearly.",
+        )
+        a2 = create_answer(
+            session,
+            question_id=question.id,
+            author_id=uuid.uuid4(),
+            body="Another helpful answer with more details for clarity.",
+        )
+        a2.is_accepted = True
+        question.accepted_answer_id = a2.id
+        session.commit()
 
     response = client.get(f"/questions/{question.id}")
     assert response.status_code == 200
-    assert response.json()["id"] == str(question.id)
+    data = response.json()
+    assert "answers" in data
+    assert len(data["answers"]) == 2
+    assert data["answers"][0]["id"] == str(a2.id)
+    assert data["answers"][1]["id"] == str(a1.id)
