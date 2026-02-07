@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import type { Question, Tag } from "../../types";
 import Badge from "./Badge";
 import TagChip from "./TagChip";
 
@@ -15,13 +16,12 @@ type QuestionStats = {
 };
 
 type QuestionCardProps = {
-  title: string;
-  excerpt: string;
-  tags: string[];
+  question: Question;
+  tags: Tag[];
   meta: QuestionMeta;
   stats: QuestionStats;
   statusLabel?: string;
-  statusVariant?: "success" | "warning" | "neutral" | "accent";
+  statusVariant?: "success" | "warning" | "neutral" | "accent" | "info" | "danger";
   leading?: ReactNode;
   action?: ReactNode;
   href?: string;
@@ -30,8 +30,7 @@ type QuestionCardProps = {
 };
 
 const QuestionCard = ({
-  title,
-  excerpt,
+  question,
   tags,
   meta,
   stats,
@@ -61,8 +60,10 @@ const QuestionCard = ({
             </div>
           ) : null}
           <div>
-            <h3 className="text-base font-semibold text-slate-900">{title}</h3>
-            <p className="mt-2 text-sm text-slate-500">{excerpt}</p>
+            <h3 className="text-base font-semibold text-slate-900">
+              {question.title}
+            </h3>
+            <p className="mt-2 text-sm text-slate-500">{question.body}</p>
           </div>
         </div>
         {statusLabel ? (
@@ -72,7 +73,7 @@ const QuestionCard = ({
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         {tags.map((tag) => (
-          <TagChip key={tag} label={tag} />
+          <TagChip key={tag.id} label={tag.name} />
         ))}
       </div>
 

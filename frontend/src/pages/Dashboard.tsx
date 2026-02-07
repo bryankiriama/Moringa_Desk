@@ -2,6 +2,7 @@ import Badge from "../components/ui/Badge";
 import MetricCard from "../components/ui/MetricCard";
 import QuestionCard from "../components/ui/QuestionCard";
 import SectionCard from "../components/ui/SectionCard";
+import type { Question, Tag } from "../types";
 
 const metrics = [
   {
@@ -74,20 +75,65 @@ const contributors = [
   },
 ];
 
-const unansweredQuestions = [
+type QuestionCardData = {
+  question: Question;
+  tags: Tag[];
+  meta: { author: string; time: string };
+  stats: { answers: number; views: number; votes?: number };
+  statusLabel?: string;
+  statusVariant?: "success" | "warning" | "neutral" | "accent" | "info" | "danger";
+};
+
+const unansweredQuestions: QuestionCardData[] = [
   {
-    title: "How to implement OAuth2 authentication in Django?",
-    excerpt: "Looking for best practices and gotchas when configuring OAuth2.",
-    tags: ["Python", "Django", "Authentication"],
+    question: {
+      id: "q-100",
+      author_id: "u-200",
+      title: "How to implement OAuth2 authentication in Django?",
+      body: "Looking for best practices and gotchas when configuring OAuth2.",
+      category: "Backend",
+      stage: "Intermediate",
+      accepted_answer_id: null,
+      created_at: "2024-01-30T08:00:00Z",
+      updated_at: "2024-01-30T08:00:00Z",
+      vote_score: 12,
+    },
+    tags: [
+      { id: "t-python", name: "Python", created_at: "2024-01-01T00:00:00Z" },
+      { id: "t-django", name: "Django", created_at: "2024-01-01T00:00:00Z" },
+      {
+        id: "t-auth",
+        name: "Authentication",
+        created_at: "2024-01-01T00:00:00Z",
+      },
+    ],
     meta: { author: "John Doe", time: "2 hours ago" },
     stats: { answers: 0, views: 24 },
     statusLabel: "High Priority",
-    statusVariant: "warning" as const,
+    statusVariant: "warning",
   },
   {
-    title: "React useState not updating immediately after API call",
-    excerpt: "State changes are delayed; how to handle this correctly?",
-    tags: ["React", "JavaScript", "Hooks"],
+    question: {
+      id: "q-101",
+      author_id: "u-201",
+      title: "React useState not updating immediately after API call",
+      body: "State changes are delayed; how to handle this correctly?",
+      category: "Frontend",
+      stage: "Foundation",
+      accepted_answer_id: null,
+      created_at: "2024-01-30T05:00:00Z",
+      updated_at: "2024-01-30T05:00:00Z",
+      vote_score: 4,
+    },
+    tags: [
+      { id: "t-react", name: "React", created_at: "2024-01-01T00:00:00Z" },
+      {
+        id: "t-js",
+        name: "JavaScript",
+        created_at: "2024-01-01T00:00:00Z",
+      },
+      { id: "t-hooks", name: "Hooks", created_at: "2024-01-01T00:00:00Z" },
+    ],
     meta: { author: "Jane Smith", time: "5 hours ago" },
     stats: { answers: 0, views: 38 },
   },
@@ -251,7 +297,7 @@ const Dashboard = () => {
         >
           <div className="space-y-4">
             {unansweredQuestions.map((question) => (
-              <QuestionCard key={question.title} {...question} />
+              <QuestionCard key={question.question.id} {...question} />
             ))}
           </div>
         </SectionCard>

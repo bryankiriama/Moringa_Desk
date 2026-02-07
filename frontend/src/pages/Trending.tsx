@@ -2,57 +2,174 @@ import Badge from "../components/ui/Badge";
 import QuestionCard from "../components/ui/QuestionCard";
 import SectionCard from "../components/ui/SectionCard";
 import TagChip from "../components/ui/TagChip";
+import type { Question, Tag } from "../types";
 
-const trendingQuestions = [
+type TrendingQuestion = {
+  rank: string;
+  trendScore: number;
+  question: Question;
+  tags: Tag[];
+  stats: { answers: number; views: number; votes?: number };
+  statusLabel?: string;
+  statusVariant?: "success" | "warning" | "neutral" | "accent" | "info" | "danger";
+};
+
+const trendingQuestions: TrendingQuestion[] = [
   {
     rank: "#1",
-    title: "Understanding async/await vs Promises in JavaScript",
-    excerpt: "What are the key differences and when should you use each approach?",
-    tags: ["JavaScript", "Async", "Promises"],
-    stats: { answers: 23, views: 5623, votes: 412 },
     trendScore: 98,
+    question: {
+      id: "q-500",
+      author_id: "u-600",
+      title: "Understanding async/await vs Promises in JavaScript",
+      body: "What are the key differences and when should you use each approach?",
+      category: "Frontend",
+      stage: "Foundation",
+      accepted_answer_id: "a-700",
+      created_at: "2024-01-29T12:00:00Z",
+      updated_at: "2024-01-29T12:00:00Z",
+      vote_score: 412,
+    },
+    tags: [
+      {
+        id: "t-js",
+        name: "JavaScript",
+        created_at: "2024-01-01T00:00:00Z",
+      },
+      { id: "t-async", name: "Async", created_at: "2024-01-01T00:00:00Z" },
+      {
+        id: "t-promises",
+        name: "Promises",
+        created_at: "2024-01-01T00:00:00Z",
+      },
+    ],
+    stats: { answers: 23, views: 5623, votes: 412 },
     statusLabel: "Hot",
-    statusVariant: "danger" as const,
+    statusVariant: "danger",
   },
   {
     rank: "#2",
-    title: "Best practices for React performance optimization",
-    excerpt: "What practical steps help you keep a large React app fast?",
-    tags: ["React", "Performance", "JavaScript"],
-    stats: { answers: 18, views: 4892, votes: 356 },
     trendScore: 87,
+    question: {
+      id: "q-501",
+      author_id: "u-601",
+      title: "Best practices for React performance optimization",
+      body: "What practical steps help you keep a large React app fast?",
+      category: "Frontend",
+      stage: "Intermediate",
+      accepted_answer_id: "a-701",
+      created_at: "2024-01-29T10:00:00Z",
+      updated_at: "2024-01-29T10:00:00Z",
+      vote_score: 356,
+    },
+    tags: [
+      { id: "t-react", name: "React", created_at: "2024-01-01T00:00:00Z" },
+      {
+        id: "t-perf",
+        name: "Performance",
+        created_at: "2024-01-01T00:00:00Z",
+      },
+      {
+        id: "t-js",
+        name: "JavaScript",
+        created_at: "2024-01-01T00:00:00Z",
+      },
+    ],
+    stats: { answers: 18, views: 4892, votes: 356 },
     statusLabel: "Rising",
-    statusVariant: "warning" as const,
+    statusVariant: "warning",
   },
   {
     rank: "#3",
-    title: "How to implement JWT authentication in Node.js",
-    excerpt: "Looking for a secure JWT implementation pattern with refresh tokens.",
-    tags: ["Node.js", "Authentication", "Security"],
-    stats: { answers: 15, views: 4231, votes: 298 },
     trendScore: 92,
+    question: {
+      id: "q-502",
+      author_id: "u-602",
+      title: "How to implement JWT authentication in Node.js",
+      body: "Looking for a secure JWT implementation pattern with refresh tokens.",
+      category: "Backend",
+      stage: "Intermediate",
+      accepted_answer_id: "a-702",
+      created_at: "2024-01-29T08:30:00Z",
+      updated_at: "2024-01-29T08:30:00Z",
+      vote_score: 298,
+    },
+    tags: [
+      { id: "t-node", name: "Node.js", created_at: "2024-01-01T00:00:00Z" },
+      {
+        id: "t-auth",
+        name: "Authentication",
+        created_at: "2024-01-01T00:00:00Z",
+      },
+      { id: "t-sec", name: "Security", created_at: "2024-01-01T00:00:00Z" },
+    ],
+    stats: { answers: 15, views: 4231, votes: 298 },
     statusLabel: "Hot",
-    statusVariant: "danger" as const,
+    statusVariant: "danger",
   },
   {
     rank: "#4",
-    title: "PostgreSQL vs MongoDB: When to use which?",
-    excerpt: "Choosing between SQL and NoSQL for a growing SaaS product.",
-    tags: ["Databases", "PostgreSQL", "MongoDB"],
-    stats: { answers: 21, views: 3945, votes: 267 },
     trendScore: 79,
+    question: {
+      id: "q-503",
+      author_id: "u-603",
+      title: "PostgreSQL vs MongoDB: When to use which?",
+      body: "Choosing between SQL and NoSQL for a growing SaaS product.",
+      category: "Databases",
+      stage: "Advanced",
+      accepted_answer_id: "a-703",
+      created_at: "2024-01-29T06:00:00Z",
+      updated_at: "2024-01-29T06:00:00Z",
+      vote_score: 267,
+    },
+    tags: [
+      {
+        id: "t-db",
+        name: "Databases",
+        created_at: "2024-01-01T00:00:00Z",
+      },
+      {
+        id: "t-pg",
+        name: "PostgreSQL",
+        created_at: "2024-01-01T00:00:00Z",
+      },
+      {
+        id: "t-mongo",
+        name: "MongoDB",
+        created_at: "2024-01-01T00:00:00Z",
+      },
+    ],
+    stats: { answers: 21, views: 3945, votes: 267 },
     statusLabel: "Rising",
-    statusVariant: "warning" as const,
+    statusVariant: "warning",
   },
   {
     rank: "#5",
-    title: "Docker multi-stage builds explained",
-    excerpt: "How to reduce image size and speed up CI builds effectively.",
-    tags: ["Docker", "DevOps", "Containers"],
-    stats: { answers: 12, views: 3567, votes: 234 },
     trendScore: 72,
+    question: {
+      id: "q-504",
+      author_id: "u-604",
+      title: "Docker multi-stage builds explained",
+      body: "How to reduce image size and speed up CI builds effectively.",
+      category: "DevOps",
+      stage: "Intermediate",
+      accepted_answer_id: null,
+      created_at: "2024-01-29T05:00:00Z",
+      updated_at: "2024-01-29T05:00:00Z",
+      vote_score: 234,
+    },
+    tags: [
+      { id: "t-docker", name: "Docker", created_at: "2024-01-01T00:00:00Z" },
+      { id: "t-devops", name: "DevOps", created_at: "2024-01-01T00:00:00Z" },
+      {
+        id: "t-containers",
+        name: "Containers",
+        created_at: "2024-01-01T00:00:00Z",
+      },
+    ],
+    stats: { answers: 12, views: 3567, votes: 234 },
     statusLabel: "New",
-    statusVariant: "info" as const,
+    statusVariant: "info",
   },
 ];
 
@@ -85,9 +202,8 @@ const Trending = () => {
           <div className="space-y-4">
             {trendingQuestions.map((question) => (
               <QuestionCard
-                key={question.title}
-                title={question.title}
-                excerpt={question.excerpt}
+                key={question.question.id}
+                question={question.question}
                 tags={question.tags}
                 meta={{ author: "Community", time: "Today" }}
                 stats={question.stats}
