@@ -52,7 +52,7 @@ const PageButton = ({ label, active, disabled, onClick }: PageButtonProps) => {
   return (
     <button
       type="button"
-      className={`min-w-[44px] rounded-xl border px-3 py-2 text-sm font-medium transition ${
+      className={`min-w-[44px] rounded-xl border px-3 py-2 text-sm font-medium transition focus-ring ${
         active
           ? "border-indigo-500 bg-indigo-500 text-white"
           : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"

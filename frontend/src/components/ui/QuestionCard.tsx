@@ -49,7 +49,7 @@ const QuestionCard = ({
     <Wrapper
       href={href}
       onClick={onClick}
-      className={`block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-slate-300 ${
+      className={`block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-slate-300 focus-ring ${
         className ?? ""
       }`}
     >

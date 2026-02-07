@@ -34,7 +34,7 @@ const AdminFaqs = () => {
               tab.active
                 ? "bg-indigo-50 text-indigo-600"
                 : "text-slate-500 hover:bg-slate-100"
-            }`}
+            } focus-ring`}
           >
             {tab.label}
           </button>
@@ -47,7 +47,7 @@ const AdminFaqs = () => {
         action={
           <button
             type="button"
-            className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white"
+            className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white focus-ring"
           >
             Add FAQ
           </button>
@@ -64,10 +64,10 @@ const AdminFaqs = () => {
                 <p className="text-xs text-slate-500">{faq.views}</p>
               </div>
               <div className="flex items-center gap-3 text-sm text-slate-400">
-                <button type="button" className="text-slate-500">
+                <button type="button" className="rounded-md text-slate-500 focus-ring">
                   Edit
                 </button>
-                <button type="button" className="text-rose-500">
+                <button type="button" className="rounded-md text-rose-500 focus-ring">
                   Delete
                 </button>
               </div>

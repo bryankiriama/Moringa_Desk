@@ -39,7 +39,7 @@ const AskQuestion = () => {
             <input
               type="text"
               placeholder="e.g., How do I implement authentication in React?"
-              className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
+              className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
             />
             <p className="mt-2 text-xs text-slate-500">
               Be specific and imagine you&apos;re asking a question to another person.
@@ -51,7 +51,7 @@ const AskQuestion = () => {
             <textarea
               rows={6}
               placeholder="Provide all the details someone would need to understand and answer your question."
-              className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
+              className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
             />
             <p className="mt-2 text-xs text-slate-500">
               You can use markdown formatting for code blocks and links.
@@ -61,13 +61,13 @@ const AskQuestion = () => {
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="text-sm font-medium text-slate-700">Category</label>
-              <select className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+              <select className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus-ring">
                 <option>Select a category</option>
               </select>
             </div>
             <div>
               <label className="text-sm font-medium text-slate-700">Learning Phase</label>
-              <select className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+              <select className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus-ring">
                 <option>Select learning phase</option>
               </select>
             </div>
@@ -78,7 +78,7 @@ const AskQuestion = () => {
             <input
               type="text"
               placeholder="Search for tags..."
-              className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
+              className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
             />
             <div className="mt-3 flex flex-wrap gap-2">
               {popularTags.map((tag) => (
@@ -91,19 +91,19 @@ const AskQuestion = () => {
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <button type="button" className="text-sm font-medium text-slate-500">
+            <button type="button" className="text-sm font-medium text-slate-500 focus-ring rounded-md">
               Save as Draft
             </button>
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600"
+                className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 focus-ring"
               >
                 Preview
               </button>
               <button
                 type="button"
-                className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-medium text-white"
+                className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-medium text-white focus-ring"
               >
                 Post Question
               </button>

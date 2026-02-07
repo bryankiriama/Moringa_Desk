@@ -112,7 +112,7 @@ const Dashboard = () => {
           </div>
           <button
             type="button"
-            className="rounded-full border border-white/40 px-5 py-2 text-sm font-medium"
+            className="rounded-full border border-white/40 px-5 py-2 text-sm font-medium focus-ring"
           >
             Explore Dashboard
           </button>
@@ -160,7 +160,7 @@ const Dashboard = () => {
           subtitle="Most frequent problem areas"
         >
           <div className="grid gap-4">
-            <div className="grid grid-cols-6 items-end gap-3">
+            <div className="grid grid-cols-2 items-end gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {categoryBars.map((item) => (
                 <div key={item.label} className="text-center">
                   <div
@@ -282,7 +282,7 @@ const Dashboard = () => {
 
       <button
         type="button"
-        className="fixed bottom-6 right-6 rounded-full border border-indigo-200 bg-white px-4 py-2 text-sm font-medium text-indigo-600 shadow-sm"
+        className="fixed bottom-6 right-6 rounded-full border border-indigo-200 bg-white px-4 py-2 text-sm font-medium text-indigo-600 shadow-sm focus-ring"
       >
         Switch to Admin View
       </button>

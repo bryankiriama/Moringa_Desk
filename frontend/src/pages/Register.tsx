@@ -14,7 +14,7 @@ const Register = () => {
           <input
             type="text"
             placeholder="Your name"
-            className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
+            className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
           />
         </div>
         <div>
@@ -22,7 +22,7 @@ const Register = () => {
           <input
             type="email"
             placeholder="you@example.com"
-            className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
+            className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
           />
         </div>
         <div>
@@ -30,12 +30,12 @@ const Register = () => {
           <input
             type="password"
             placeholder="Create a password"
-            className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
+            className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
           />
         </div>
         <button
           type="button"
-          className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-medium text-white"
+          className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-medium text-white focus-ring"
         >
           Create Account
         </button>
@@ -43,7 +43,7 @@ const Register = () => {
 
       <p className="text-center text-sm text-slate-500">
         Already have an account?{" "}
-        <Link to="/login" className="font-medium text-indigo-600">
+        <Link to="/login" className="rounded-md font-medium text-indigo-600 focus-ring">
           Sign in
         </Link>
       </p>
