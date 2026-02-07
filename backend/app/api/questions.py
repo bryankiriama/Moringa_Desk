@@ -13,10 +13,28 @@ from backend.app.repositories.question_repo import (
 )
 from backend.app.repositories.question_tag_repo import list_tags_for_question
 from backend.app.repositories.related_question_repo import list_related_questions
+from backend.app.repositories.vote_repo import get_vote_score
 from backend.app.schemas.question import QuestionCreate, QuestionOut
 from backend.app.schemas.question_detail import QuestionDetailOut
 
 router = APIRouter(prefix="/questions", tags=["questions"])
+
+
+def _question_out(db: Session, question) -> QuestionOut:
+    return QuestionOut(
+        id=question.id,
+        author_id=question.author_id,
+        title=question.title,
+        body=question.body,
+        category=question.category,
+        stage=question.stage,
+        accepted_answer_id=question.accepted_answer_id,
+        created_at=question.created_at,
+        updated_at=question.updated_at,
+        vote_score=get_vote_score(
+            db, target_type="question", target_id=question.id
+        ),
+    )
 
 
 @router.post("", response_model=QuestionOut)
@@ -33,7 +51,7 @@ def create_question_endpoint(
         category=payload.category,
         stage=payload.stage,
     )
-    return question
+    return _question_out(db, question)
 
 
 @router.get("", response_model=list[QuestionOut])
@@ -46,7 +64,7 @@ def list_questions_endpoint(
     q: str | None = None,
     db: Session = Depends(get_db),
 ) -> list[QuestionOut]:
-    return list_questions(
+    questions = list_questions(
         db,
         limit=limit,
         offset=offset,
@@ -55,6 +73,7 @@ def list_questions_endpoint(
         stage=stage,
         q=q,
     )
+    return [_question_out(db, q) for q in questions]
 
 
 @router.get("/duplicates", response_model=list[QuestionOut])
@@ -65,7 +84,8 @@ def duplicate_questions_endpoint(
     if len(title) < 10:
         return []
 
-    return search_questions_by_title(db, title=title, limit=5)
+    questions = search_questions_by_title(db, title=title, limit=5)
+    return [_question_out(db, q) for q in questions]
 
 
 @router.get("/{question_id}", response_model=QuestionDetailOut)
@@ -83,6 +103,22 @@ def get_question_endpoint(
     tags = list_tags_for_question(db, question_id=question_id)
     related = list_related_questions(db, question_id=question_id)
 
+    answers_out = [
+        {
+            "id": a.id,
+            "question_id": a.question_id,
+            "author_id": a.author_id,
+            "body": a.body,
+            "is_accepted": a.is_accepted,
+            "created_at": a.created_at,
+            "updated_at": a.updated_at,
+            "vote_score": get_vote_score(
+                db, target_type="answer", target_id=a.id
+            ),
+        }
+        for a in answers
+    ]
+
     return QuestionDetailOut(
         id=question.id,
         author_id=question.author_id,
@@ -93,7 +129,7 @@ def get_question_endpoint(
         accepted_answer_id=question.accepted_answer_id,
         created_at=question.created_at,
         updated_at=question.updated_at,
-        answers=answers,
+        answers=answers_out,
         tags=tags,
-        related_questions=related,
+        related_questions=[_question_out(db, q) for q in related],
     )

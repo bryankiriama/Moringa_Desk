@@ -16,5 +16,6 @@ class AnswerOut(BaseModel):
     is_accepted: bool
     created_at: datetime
     updated_at: datetime
+    vote_score: int
 
     model_config = ConfigDict(from_attributes=True)

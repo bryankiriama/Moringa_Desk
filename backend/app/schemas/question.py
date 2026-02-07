@@ -21,5 +21,6 @@ class QuestionOut(BaseModel):
     accepted_answer_id: uuid.UUID | None
     created_at: datetime
     updated_at: datetime
+    vote_score: int
 
     model_config = ConfigDict(from_attributes=True)
