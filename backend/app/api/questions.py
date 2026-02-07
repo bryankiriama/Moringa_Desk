@@ -40,9 +40,21 @@ def create_question_endpoint(
 def list_questions_endpoint(
     limit: int = 20,
     offset: int = 0,
+    tag: str | None = None,
+    category: str | None = None,
+    stage: str | None = None,
+    q: str | None = None,
     db: Session = Depends(get_db),
 ) -> list[QuestionOut]:
-    return list_questions(db, limit=limit, offset=offset)
+    return list_questions(
+        db,
+        limit=limit,
+        offset=offset,
+        tag=tag,
+        category=category,
+        stage=stage,
+        q=q,
+    )
 
 
 @router.get("/duplicates", response_model=list[QuestionOut])
