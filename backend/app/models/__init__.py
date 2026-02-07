@@ -1,5 +1,6 @@
 from backend.app.models.answer import Answer
 from backend.app.models.faq import FAQ
+from backend.app.models.flag import Flag
 from backend.app.models.follow import Follow
 from backend.app.models.notification import Notification
 from backend.app.models.password_reset import PasswordResetToken
@@ -22,4 +23,5 @@ __all__ = [
     "Notification",
     "RelatedQuestion",
     "FAQ",
+    "Flag",
 ]
