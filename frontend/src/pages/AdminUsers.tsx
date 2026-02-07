@@ -64,7 +64,7 @@ const AdminUsers = () => {
               tab.active
                 ? "bg-indigo-50 text-indigo-600"
                 : "text-slate-500 hover:bg-slate-100"
-            }`}
+            } focus-ring`}
           >
             {tab.label}
           </button>
@@ -77,42 +77,44 @@ const AdminUsers = () => {
         action={
           <button
             type="button"
-            className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white"
+            className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white focus-ring"
           >
             Invite User
           </button>
         }
       >
-        <div className="space-y-4">
-          <div className="grid grid-cols-[2fr,1fr,1fr,1fr,1fr] gap-4 text-xs uppercase tracking-wide text-slate-400">
-            <span>User</span>
-            <span>Role</span>
-            <span>Questions</span>
-            <span>Answers</span>
-            <span>Actions</span>
-          </div>
-          {users.map((user) => (
-            <div
-              key={user.email}
-              className="grid grid-cols-[2fr,1fr,1fr,1fr,1fr] items-center gap-4 border-t border-slate-100 pt-4 text-sm"
-            >
-              <div>
-                <p className="font-semibold text-slate-900">{user.name}</p>
-                <p className="text-xs text-slate-500">{user.email}</p>
-              </div>
-              <Badge label={user.role} variant={roleVariant(user.role)} />
-              <span className="text-slate-600">{user.questions}</span>
-              <span className="text-slate-600">{user.answers}</span>
-              <div className="flex items-center gap-3 text-slate-400">
-                <button type="button" className="text-sm text-slate-500">
-                  Edit
-                </button>
-                <button type="button" className="text-sm text-rose-500">
-                  Remove
-                </button>
-              </div>
+        <div className="overflow-x-auto">
+          <div className="min-w-[720px] space-y-4">
+            <div className="grid grid-cols-[2fr,1fr,1fr,1fr,1fr] gap-4 text-xs uppercase tracking-wide text-slate-400">
+              <span>User</span>
+              <span>Role</span>
+              <span>Questions</span>
+              <span>Answers</span>
+              <span>Actions</span>
             </div>
-          ))}
+            {users.map((user) => (
+              <div
+                key={user.email}
+                className="grid grid-cols-[2fr,1fr,1fr,1fr,1fr] items-center gap-4 border-t border-slate-100 pt-4 text-sm"
+              >
+                <div>
+                  <p className="font-semibold text-slate-900">{user.name}</p>
+                  <p className="text-xs text-slate-500">{user.email}</p>
+                </div>
+                <Badge label={user.role} variant={roleVariant(user.role)} />
+                <span className="text-slate-600">{user.questions}</span>
+                <span className="text-slate-600">{user.answers}</span>
+                <div className="flex items-center gap-3 text-slate-400">
+                  <button type="button" className="rounded-md text-sm text-slate-500 focus-ring">
+                    Edit
+                  </button>
+                  <button type="button" className="rounded-md text-sm text-rose-500 focus-ring">
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </SectionCard>
     </div>

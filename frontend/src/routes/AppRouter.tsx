@@ -14,6 +14,7 @@ import Notifications from "../pages/Notifications";
 import QuestionDetail from "../pages/QuestionDetail";
 import QuestionsList from "../pages/QuestionsList";
 import Register from "../pages/Register";
+import Trending from "../pages/Trending";
 import RequireAuth from "./RequireAuth";
 
 const AppRouter = () => {
@@ -33,6 +34,7 @@ const AppRouter = () => {
             <Route path="/questions/ask" element={<AskQuestion />} />
             <Route path="/questions/:questionId" element={<QuestionDetail />} />
             <Route path="/notifications" element={<Notifications />} />
+            <Route path="/trending" element={<Trending />} />
           </Route>
 
           <Route path="/admin" element={<AdminLayout />}>

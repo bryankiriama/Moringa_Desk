@@ -18,7 +18,7 @@ const studentItems: SidebarItem[] = [
   { label: "Dashboard", to: "/dashboard", match: ["/dashboard"] },
   { label: "Questions", to: "/questions", match: ["/questions"] },
   { label: "Ask Question", to: "/questions/ask", match: ["/questions/ask"] },
-  { label: "Trending" },
+  { label: "Trending", to: "/trending", match: ["/trending"] },
   { label: "Notifications", to: "/notifications", match: ["/notifications"] },
 ];
 
@@ -26,7 +26,7 @@ const adminItems: SidebarItem[] = [
   { label: "Dashboard", to: "/admin/dashboard", match: ["/admin/dashboard"] },
   { label: "Questions", to: "/questions", match: ["/questions"] },
   { label: "Ask Question", to: "/questions/ask", match: ["/questions/ask"] },
-  { label: "Trending" },
+  { label: "Trending", to: "/trending", match: ["/trending"] },
   { label: "Notifications", to: "/notifications", match: ["/notifications"] },
   { label: "Users", to: "/admin/users", match: ["/admin/users"] },
   { label: "Manage Tags", to: "/admin/tags", match: ["/admin/tags"] },
@@ -136,7 +136,7 @@ const SidebarNavItem = ({ item, isActive }: SidebarNavItemProps) => {
       to={item.to}
       aria-current={isActive ? "page" : undefined}
       className={[
-        "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition",
+        "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition focus-ring",
         isActive
           ? "bg-indigo-50 text-indigo-600"
           : "text-slate-600 hover:bg-slate-100",

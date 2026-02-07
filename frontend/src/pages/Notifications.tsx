@@ -49,7 +49,7 @@ const Notifications = () => {
         </div>
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600"
+          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 focus-ring"
         >
           Preferences
         </button>
@@ -59,13 +59,15 @@ const Notifications = () => {
         {tabs.map((tab) => (
           <TagChip key={tab.label} label={tab.label} active={tab.active} />
         ))}
-        <div className="ml-auto text-sm text-slate-500">Mark all as read</div>
+        <button type="button" className="ml-auto rounded-md text-sm text-slate-500 focus-ring">
+          Mark all as read
+        </button>
       </div>
 
       <SectionCard>
         <div className="space-y-4">
           {notifications.map((item) => (
-            <NotificationItem key={item.title} {...item} badgeLabel={item.isNew ? "New" : undefined} />
+            <NotificationItem key={item.title} {...item} />
           ))}
         </div>
       </SectionCard>

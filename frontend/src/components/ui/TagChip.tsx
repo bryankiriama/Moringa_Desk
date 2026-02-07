@@ -31,10 +31,11 @@ const TagChip = ({
   return (
     <button
       type="button"
+      aria-pressed={active}
       onClick={onClick}
       className={`inline-flex items-center gap-1.5 rounded-full border font-medium transition ${
         sizeStyles[size]
-      } ${baseStyle} ${className ?? ""}`}
+      } ${baseStyle} ${className ?? ""} focus-ring`}
     >
       {icon ? <span className="text-[10px]">{icon}</span> : null}
       {label}
