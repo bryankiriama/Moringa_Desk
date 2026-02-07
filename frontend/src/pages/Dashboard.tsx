@@ -171,9 +171,6 @@ const Dashboard = () => {
                 </div>
               ))}
             </div>
-            <div className="rounded-xl border border-dashed border-slate-200 p-4 text-xs text-slate-500">
-              Chart placeholder: category distribution
-            </div>
           </div>
         </SectionCard>
 

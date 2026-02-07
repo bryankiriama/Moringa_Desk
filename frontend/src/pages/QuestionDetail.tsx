@@ -90,7 +90,16 @@ const QuestionDetail = () => {
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-            Full question description and code snippets will appear here.
+            <p>
+              I&apos;m implementing OAuth2 for a Django REST API and want to follow best
+              practices for production. Which libraries are most commonly used, and how
+              do you handle token refresh and client credentials in a secure way?
+            </p>
+            <p className="mt-3">
+              I&apos;ve reviewed the OAuth2 grant types and understand the flow, but I&apos;m
+              unsure how to structure the settings and middleware. Any examples or
+              pointers would be appreciated.
+            </p>
           </div>
         </div>
       </SectionCard>
