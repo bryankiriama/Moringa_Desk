@@ -7,6 +7,7 @@ from backend.app.core.deps import get_current_user
 from backend.app.db.session import get_db
 from backend.app.models.user import User
 from backend.app.repositories.answer_repo import create_answer, list_answers_for_question
+from backend.app.repositories.follow_repo import list_followers
 from backend.app.repositories.notification_repo import create_notification
 from backend.app.repositories.question_repo import get_question_by_id
 from backend.app.repositories.vote_repo import get_vote_score
@@ -54,6 +55,21 @@ def create_answer_endpoint(
             db,
             user_id=question.author_id,
             type="answer_posted",
+            payload={
+                "question_id": str(question.id),
+                "answer_id": str(answer.id),
+                "actor_id": str(current_user.id),
+            },
+        )
+
+    followers = list_followers(db, question_id=question.id)
+    for follow in followers:
+        if follow.user_id in (current_user.id, question.author_id):
+            continue
+        create_notification(
+            db,
+            user_id=follow.user_id,
+            type="followed_question_answer",
             payload={
                 "question_id": str(question.id),
                 "answer_id": str(answer.id),

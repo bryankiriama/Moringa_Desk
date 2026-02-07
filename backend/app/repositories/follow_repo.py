@@ -42,3 +42,12 @@ def list_followed_questions(session: Session, *, user_id) -> list[Question]:
         .order_by(Follow.created_at.desc())
     )
     return list(session.scalars(stmt).all())
+
+
+def list_followers(session: Session, *, question_id) -> list[Follow]:
+    stmt = (
+        select(Follow)
+        .where(Follow.question_id == question_id)
+        .order_by(Follow.created_at.asc())
+    )
+    return list(session.scalars(stmt).all())
