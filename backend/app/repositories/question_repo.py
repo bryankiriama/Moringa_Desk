@@ -1,7 +1,9 @@
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from backend.app.models.question import Question
+from backend.app.models.question_tag import QuestionTag
+from backend.app.models.tag import Tag
 
 
 def create_question(
@@ -30,12 +32,48 @@ def get_question_by_id(session: Session, *, question_id) -> Question | None:
     return session.get(Question, question_id)
 
 
-def list_questions(session: Session, *, limit: int = 20, offset: int = 0) -> list[Question]:
+def list_questions(
+    session: Session,
+    *,
+    limit: int = 20,
+    offset: int = 0,
+    tag: str | None = None,
+    category: str | None = None,
+    stage: str | None = None,
+    q: str | None = None,
+) -> list[Question]:
+    stmt = select(Question)
+
+    filters = []
+    if category is not None:
+        filters.append(Question.category == category)
+    if stage is not None:
+        filters.append(Question.stage == stage)
+    if q is not None:
+        like = f"%{q}%"
+        filters.append(or_(Question.title.ilike(like), Question.body.ilike(like)))
+
+    if tag is not None:
+        stmt = stmt.join(QuestionTag, QuestionTag.question_id == Question.id)
+        stmt = stmt.join(Tag, Tag.id == QuestionTag.tag_id)
+        filters.append(Tag.name == tag)
+
+    if filters:
+        stmt = stmt.where(and_(*filters))
+
     stmt = (
-        select(Question)
-        .order_by(Question.created_at.desc())
+        stmt.order_by(Question.created_at.desc())
         .limit(limit)
         .offset(offset)
+    )
+    return list(session.scalars(stmt).all())
+
+
+def list_questions_by_author(session: Session, *, author_id) -> list[Question]:
+    stmt = (
+        select(Question)
+        .where(Question.author_id == author_id)
+        .order_by(Question.created_at.desc())
     )
     return list(session.scalars(stmt).all())
 
