@@ -1,10 +1,11 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, matchPath, useLocation } from "react-router-dom";
 
 type SidebarVariant = "student" | "admin";
 
 type SidebarItem = {
   label: string;
   to?: string;
+  match?: string[];
 };
 
 type SidebarProps = {
@@ -14,27 +15,46 @@ type SidebarProps = {
 };
 
 const studentItems: SidebarItem[] = [
-  { label: "Dashboard", to: "/dashboard" },
-  { label: "Questions", to: "/questions" },
-  { label: "Ask Question", to: "/questions/ask" },
+  { label: "Dashboard", to: "/dashboard", match: ["/dashboard"] },
+  { label: "Questions", to: "/questions", match: ["/questions"] },
+  { label: "Ask Question", to: "/questions/ask", match: ["/questions/ask"] },
   { label: "Trending" },
-  { label: "Notifications", to: "/notifications" },
+  { label: "Notifications", to: "/notifications", match: ["/notifications"] },
 ];
 
 const adminItems: SidebarItem[] = [
-  { label: "Dashboard", to: "/admin/dashboard" },
-  { label: "Questions", to: "/questions" },
-  { label: "Ask Question", to: "/questions/ask" },
+  { label: "Dashboard", to: "/admin/dashboard", match: ["/admin/dashboard"] },
+  { label: "Questions", to: "/questions", match: ["/questions"] },
+  { label: "Ask Question", to: "/questions/ask", match: ["/questions/ask"] },
   { label: "Trending" },
-  { label: "Notifications", to: "/notifications" },
-  { label: "Users", to: "/admin/users" },
-  { label: "Manage Tags", to: "/admin/tags" },
-  { label: "FAQs", to: "/admin/faqs" },
+  { label: "Notifications", to: "/notifications", match: ["/notifications"] },
+  { label: "Users", to: "/admin/users", match: ["/admin/users"] },
+  { label: "Manage Tags", to: "/admin/tags", match: ["/admin/tags"] },
+  { label: "FAQs", to: "/admin/faqs", match: ["/admin/faqs"] },
   { label: "Settings" },
 ];
 
 const Sidebar = ({ variant, isOpen, onClose }: SidebarProps) => {
   const items = variant === "admin" ? adminItems : studentItems;
+  const location = useLocation();
+  const questionDetailMatch = matchPath(
+    { path: "/questions/:questionId", end: true },
+    location.pathname
+  );
+  const isQuestionDetail =
+    questionDetailMatch?.params?.questionId &&
+    questionDetailMatch.params.questionId !== "ask";
+
+  const isItemActive = (item: SidebarItem) => {
+    if (!item.to) return false;
+    if (item.to === "/questions") {
+      return location.pathname === "/questions" || Boolean(isQuestionDetail);
+    }
+    const patterns = item.match ?? [item.to];
+    return patterns.some((pattern) =>
+      Boolean(matchPath({ path: pattern, end: true }, location.pathname))
+    );
+  };
 
   return (
     <>
@@ -58,7 +78,11 @@ const Sidebar = ({ variant, isOpen, onClose }: SidebarProps) => {
 
           <nav className="flex-1 space-y-2 px-4 py-6">
             {items.map((item) => (
-              <SidebarNavItem key={item.label} item={item} />
+              <SidebarNavItem
+                key={item.label}
+                item={item}
+                isActive={isItemActive(item)}
+              />
             ))}
           </nav>
 
@@ -94,9 +118,10 @@ const Sidebar = ({ variant, isOpen, onClose }: SidebarProps) => {
 
 type SidebarNavItemProps = {
   item: SidebarItem;
+  isActive: boolean;
 };
 
-const SidebarNavItem = ({ item }: SidebarNavItemProps) => {
+const SidebarNavItem = ({ item, isActive }: SidebarNavItemProps) => {
   if (!item.to) {
     return (
       <div className="flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2 text-sm text-slate-400">
@@ -109,14 +134,13 @@ const SidebarNavItem = ({ item }: SidebarNavItemProps) => {
   return (
     <NavLink
       to={item.to}
-      className={({ isActive }) =>
-        [
-          "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition",
-          isActive
-            ? "bg-indigo-50 text-indigo-600"
-            : "text-slate-600 hover:bg-slate-100",
-        ].join(" ")
-      }
+      aria-current={isActive ? "page" : undefined}
+      className={[
+        "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition",
+        isActive
+          ? "bg-indigo-50 text-indigo-600"
+          : "text-slate-600 hover:bg-slate-100",
+      ].join(" ")}
     >
       <span
         className="h-5 w-5 rounded-md bg-slate-200"
