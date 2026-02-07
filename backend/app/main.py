@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from backend.app.api.admin_users import router as admin_users_router
 from backend.app.api.answers import router as answers_router
 from backend.app.api.auth import router as auth_router
 from backend.app.api.faqs import router as faqs_router
@@ -25,3 +26,4 @@ app.include_router(notifications_router)
 app.include_router(related_router)
 app.include_router(faqs_router)
 app.include_router(flags_router)
+app.include_router(admin_users_router)
