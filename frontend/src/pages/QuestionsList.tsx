@@ -2,6 +2,7 @@ import Badge from "../components/ui/Badge";
 import Pagination from "../components/ui/Pagination";
 import QuestionCard from "../components/ui/QuestionCard";
 import TagChip from "../components/ui/TagChip";
+import type { Question, Tag } from "../types";
 
 const filters = [
   { label: "Newest", active: true },
@@ -19,36 +20,111 @@ const tagFilters = [
   { label: "API" },
 ];
 
-const questions = [
+type QuestionCardData = {
+  question: Question;
+  tags: Tag[];
+  meta: { author: string; time: string };
+  stats: { answers: number; views: number; votes?: number };
+  statusLabel?: string;
+  statusVariant?: "success" | "warning" | "neutral" | "accent" | "info" | "danger";
+};
+
+const questions: QuestionCardData[] = [
   {
-    title: "How to implement custom hooks in React for data fetching?",
-    excerpt:
-      "I am trying to create a reusable custom hook for fetching data from an API. What are the best practices for error handling and loading states?",
-    tags: ["React", "JavaScript", "Hooks"],
+    question: {
+      id: "q-300",
+      author_id: "u-400",
+      title: "How to implement custom hooks in React for data fetching?",
+      body:
+        "I am trying to create a reusable custom hook for fetching data from an API. What are the best practices for error handling and loading states?",
+      category: "Frontend",
+      stage: "Intermediate",
+      accepted_answer_id: "a-500",
+      created_at: "2024-01-29T12:00:00Z",
+      updated_at: "2024-01-29T12:00:00Z",
+      vote_score: 24,
+    },
+    tags: [
+      { id: "t-react", name: "React", created_at: "2024-01-01T00:00:00Z" },
+      {
+        id: "t-js",
+        name: "JavaScript",
+        created_at: "2024-01-01T00:00:00Z",
+      },
+      { id: "t-hooks", name: "Hooks", created_at: "2024-01-01T00:00:00Z" },
+    ],
     meta: { author: "Sarah Chen", time: "2 hours ago" },
     stats: { answers: 5, views: 342, votes: 24 },
     statusLabel: "Answered",
-    statusVariant: "success" as const,
+    statusVariant: "success",
   },
   {
-    title: "Understanding PostgreSQL indexing strategies",
-    excerpt:
-      "What are the differences between B-tree, Hash, and GIN indexes? When should I use each type for optimal query performance?",
-    tags: ["Databases", "PostgreSQL", "Performance"],
+    question: {
+      id: "q-301",
+      author_id: "u-401",
+      title: "Understanding PostgreSQL indexing strategies",
+      body:
+        "What are the differences between B-tree, Hash, and GIN indexes? When should I use each type for optimal query performance?",
+      category: "Databases",
+      stage: "Intermediate",
+      accepted_answer_id: "a-501",
+      created_at: "2024-01-29T09:00:00Z",
+      updated_at: "2024-01-29T09:00:00Z",
+      vote_score: 18,
+    },
+    tags: [
+      {
+        id: "t-db",
+        name: "Databases",
+        created_at: "2024-01-01T00:00:00Z",
+      },
+      {
+        id: "t-pg",
+        name: "PostgreSQL",
+        created_at: "2024-01-01T00:00:00Z",
+      },
+      {
+        id: "t-perf",
+        name: "Performance",
+        created_at: "2024-01-01T00:00:00Z",
+      },
+    ],
     meta: { author: "Michael Johnson", time: "5 hours ago" },
     stats: { answers: 3, views: 256, votes: 18 },
     statusLabel: "Answered",
-    statusVariant: "success" as const,
+    statusVariant: "success",
   },
   {
-    title: "Debugging memory leaks in Python applications",
-    excerpt:
-      "My Python application is experiencing memory leaks. What tools and techniques can I use to identify and fix them?",
-    tags: ["Python", "Debugging", "Performance"],
+    question: {
+      id: "q-302",
+      author_id: "u-402",
+      title: "Debugging memory leaks in Python applications",
+      body:
+        "My Python application is experiencing memory leaks. What tools and techniques can I use to identify and fix them?",
+      category: "Backend",
+      stage: "Advanced",
+      accepted_answer_id: "a-502",
+      created_at: "2024-01-29T06:00:00Z",
+      updated_at: "2024-01-29T06:00:00Z",
+      vote_score: 32,
+    },
+    tags: [
+      { id: "t-python", name: "Python", created_at: "2024-01-01T00:00:00Z" },
+      {
+        id: "t-debug",
+        name: "Debugging",
+        created_at: "2024-01-01T00:00:00Z",
+      },
+      {
+        id: "t-perf",
+        name: "Performance",
+        created_at: "2024-01-01T00:00:00Z",
+      },
+    ],
     meta: { author: "Aisha Patel", time: "8 hours ago" },
     stats: { answers: 7, views: 487, votes: 32 },
     statusLabel: "Answered",
-    statusVariant: "success" as const,
+    statusVariant: "success",
   },
 ];
 
@@ -85,7 +161,7 @@ const QuestionsList = () => {
       <div className="space-y-5">
         {questions.map((question) => (
           <QuestionCard
-            key={question.title}
+            key={question.question.id}
             {...question}
             leading={<span className="text-sm font-semibold">{question.stats.votes}</span>}
           />

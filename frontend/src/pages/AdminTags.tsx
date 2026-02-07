@@ -1,6 +1,7 @@
 import Badge from "../components/ui/Badge";
 import SectionCard from "../components/ui/SectionCard";
 import TagChip from "../components/ui/TagChip";
+import type { Tag } from "../types";
 
 const tabs = [
   { label: "Manage Tags", active: true },
@@ -8,12 +9,39 @@ const tabs = [
   { label: "User Management", active: false },
 ];
 
-const tags = [
-  { name: "Python", count: 234 },
-  { name: "JavaScript", count: 198 },
-  { name: "React", count: 165 },
-  { name: "Databases", count: 143 },
-  { name: "DevOps", count: 98 },
+type TagRow = Tag & { usage_count: number };
+
+const tags: TagRow[] = [
+  {
+    id: "t-python",
+    name: "Python",
+    created_at: "2024-01-01T00:00:00Z",
+    usage_count: 234,
+  },
+  {
+    id: "t-js",
+    name: "JavaScript",
+    created_at: "2024-01-01T00:00:00Z",
+    usage_count: 198,
+  },
+  {
+    id: "t-react",
+    name: "React",
+    created_at: "2024-01-01T00:00:00Z",
+    usage_count: 165,
+  },
+  {
+    id: "t-db",
+    name: "Databases",
+    created_at: "2024-01-01T00:00:00Z",
+    usage_count: 143,
+  },
+  {
+    id: "t-devops",
+    name: "DevOps",
+    created_at: "2024-01-01T00:00:00Z",
+    usage_count: 98,
+  },
 ];
 
 const AdminTags = () => {
@@ -63,12 +91,14 @@ const AdminTags = () => {
         <div className="space-y-4">
           {tags.map((tag) => (
             <div
-              key={tag.name}
+              key={tag.id}
               className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4"
             >
               <div className="flex items-center gap-3">
                 <TagChip label={tag.name} />
-                <span className="text-sm text-slate-500">Used in {tag.count} questions</span>
+                <span className="text-sm text-slate-500">
+                  Used in {tag.usage_count} questions
+                </span>
               </div>
               <div className="flex items-center gap-3 text-sm text-slate-400">
                 <button type="button" className="rounded-md text-slate-500 focus-ring">

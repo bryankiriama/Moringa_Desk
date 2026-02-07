@@ -1,5 +1,6 @@
 import Badge from "../components/ui/Badge";
 import SectionCard from "../components/ui/SectionCard";
+import type { User } from "../types";
 
 const tabs = [
   { label: "Manage Tags", active: false },
@@ -7,42 +8,53 @@ const tabs = [
   { label: "User Management", active: true },
 ];
 
-const users = [
+type UserRow = User & { questions: number; answers: number };
+
+const users: UserRow[] = [
   {
-    name: "Sarah Chen",
+    id: "u-700",
+    full_name: "Sarah Chen",
     email: "sarah@example.com",
-    role: "Admin",
+    role: "admin",
+    created_at: "2024-01-15T10:00:00Z",
+    updated_at: null,
     questions: 45,
     answers: 234,
   },
   {
-    name: "Michael Johnson",
+    id: "u-701",
+    full_name: "Michael Johnson",
     email: "michael@example.com",
-    role: "Moderator",
+    role: "admin",
+    created_at: "2024-01-12T09:00:00Z",
+    updated_at: null,
     questions: 32,
     answers: 198,
   },
   {
-    name: "Aisha Patel",
+    id: "u-702",
+    full_name: "Aisha Patel",
     email: "aisha@example.com",
-    role: "Student",
+    role: "student",
+    created_at: "2024-01-10T08:00:00Z",
+    updated_at: null,
     questions: 28,
     answers: 167,
   },
   {
-    name: "James Martinez",
+    id: "u-703",
+    full_name: "James Martinez",
     email: "james@example.com",
-    role: "Student",
+    role: "student",
+    created_at: "2024-01-08T08:00:00Z",
+    updated_at: null,
     questions: 19,
     answers: 143,
   },
 ];
 
-const roleVariant = (role: string) => {
-  if (role === "Admin") return "accent";
-  if (role === "Moderator") return "info";
-  return "neutral";
-};
+const roleVariant = (role: User["role"]) =>
+  role === "admin" ? "accent" : "neutral";
 
 const AdminUsers = () => {
   return (
@@ -98,10 +110,14 @@ const AdminUsers = () => {
                 className="grid grid-cols-[2fr,1fr,1fr,1fr,1fr] items-center gap-4 border-t border-slate-100 pt-4 text-sm"
               >
                 <div>
-                  <p className="font-semibold text-slate-900">{user.name}</p>
+                  <p className="font-semibold text-slate-900">{user.full_name}</p>
                   <p className="text-xs text-slate-500">{user.email}</p>
                 </div>
-                <Badge label={user.role} variant={roleVariant(user.role)} />
+                <Badge
+                  label={user.role}
+                  variant={roleVariant(user.role)}
+                  className="capitalize"
+                />
                 <span className="text-slate-600">{user.questions}</span>
                 <span className="text-slate-600">{user.answers}</span>
                 <div className="flex items-center gap-3 text-slate-400">
