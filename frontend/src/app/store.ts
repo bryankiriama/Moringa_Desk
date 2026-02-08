@@ -6,6 +6,7 @@ import answersReducer from "../features/answers/answersSlice";
 import notificationsReducer from "../features/notifications/notificationsSlice";
 import votesReducer from "../features/votes/votesSlice";
 import flagsReducer from "../features/flags/flagsSlice";
+import followsReducer from "../features/follows/followsSlice";
 import adminReducer from "../features/admin/adminSlice";
 
 export const store = configureStore({
@@ -16,6 +17,7 @@ export const store = configureStore({
     notifications: notificationsReducer,
     votes: votesReducer,
     flags: flagsReducer,
+    follows: followsReducer,
     admin: adminReducer,
   },
 });

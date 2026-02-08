@@ -5,3 +5,4 @@ export * as notificationApi from "./notifications";
 export * as adminApi from "./admin";
 export * as voteApi from "./votes";
 export * as flagApi from "./flags";
+export * as followApi from "./follows";
