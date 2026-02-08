@@ -7,6 +7,7 @@ type SidebarItem = {
   to?: string;
   match?: string[];
   disabledReason?: string;
+  section?: boolean;
 };
 
 type SidebarProps = {
@@ -29,6 +30,7 @@ const adminItems: SidebarItem[] = [
   { label: "Ask Question", to: "/questions/ask", match: ["/questions/ask"] },
   { label: "Trending", to: "/trending", match: ["/trending"] },
   { label: "Notifications", to: "/notifications", match: ["/notifications"] },
+  { label: "Admin", section: true },
   { label: "Users", to: "/admin/users", match: ["/admin/users"] },
   { label: "Manage Tags", to: "/admin/tags", match: ["/admin/tags"] },
   { label: "FAQs", to: "/admin/faqs", match: ["/admin/faqs"] },
@@ -123,6 +125,14 @@ type SidebarNavItemProps = {
 };
 
 const SidebarNavItem = ({ item, isActive }: SidebarNavItemProps) => {
+  if (item.section) {
+    return (
+      <div className="px-3 pt-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
+        {item.label}
+      </div>
+    );
+  }
+
   if (!item.to) {
     const accessibleLabel = item.disabledReason
       ? `${item.label} (${item.disabledReason})`
