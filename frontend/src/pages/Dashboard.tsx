@@ -163,6 +163,11 @@ const Dashboard = () => {
     }
   };
 
+  const handleRetryFollowList = () => {
+    dispatch(clearFollowListError());
+    dispatch(fetchFollowedQuestions());
+  };
+
   return (
     <div className="space-y-8">
       <section className="rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-emerald-600 p-8 text-white shadow-sm">
@@ -370,7 +375,17 @@ const Dashboard = () => {
           />
         )}
         {listError ? (
-          <p className="mt-3 text-sm text-rose-600">{listError}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+            <p className="text-rose-600">{listError}</p>
+            <button
+              type="button"
+              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={handleRetryFollowList}
+              disabled={isLoadingList}
+            >
+              {isLoadingList ? "Retrying..." : "Retry"}
+            </button>
+          </div>
         ) : null}
       </SectionCard>
 
