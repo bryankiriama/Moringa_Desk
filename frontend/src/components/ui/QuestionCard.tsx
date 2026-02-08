@@ -25,7 +25,7 @@ const QuestionCard = ({
 }: QuestionCardProps) => {
   return (
     <div
-      className={`block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-slate-300 focus-within:ring-2 focus-within:ring-indigo-200 ${
+      className={`block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-slate-300 focus-within:ring-2 focus-within:ring-indigo-200 focus-within:ring-offset-2 focus-within:ring-offset-white ${
         className ?? ""
       }`}
     >
