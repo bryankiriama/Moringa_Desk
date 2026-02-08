@@ -116,7 +116,7 @@ const AdminTags = () => {
           <EmptyState
             title="No tags created"
             description="Create tags to help organize questions."
-            actionLabel="Add tag"
+            actionLabel="Add Tag"
           />
         ) : (
           <div className="space-y-4">

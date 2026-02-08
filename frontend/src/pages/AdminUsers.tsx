@@ -87,7 +87,7 @@ const AdminUsers = () => {
           <EmptyState
             title="No users yet"
             description="Invited users will show up here once they accept."
-            actionLabel="Invite user"
+            actionLabel="Invite User"
           />
         ) : (
           <div className="overflow-x-auto">

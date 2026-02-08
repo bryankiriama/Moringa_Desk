@@ -141,7 +141,7 @@ const QuestionsList = () => {
         <EmptyState
           title="No questions yet"
           description="New questions will appear here once the community starts posting."
-          actionLabel="Start by asking"
+          actionLabel="Start Asking"
         />
       ) : (
         <div className="space-y-5">
