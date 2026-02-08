@@ -11,6 +11,7 @@ import {
   fetchFollowedQuestions,
   selectFollows,
 } from "../features/follows/followsSlice";
+import { unfollowQuestionItem } from "../features/follows/followsSlice";
 import type { MetricCardData, QuestionCardData } from "../types";
 
 const metrics: MetricCardData[] = [
@@ -141,12 +142,22 @@ const unansweredQuestions: QuestionCardData[] = [
 
 const Dashboard = () => {
   const dispatch = useAppDispatch();
-  const { items: followedQuestions, listStatus, listError } =
+  const { items: followedQuestions, listStatus, listError, status: followStatus } =
     useAppSelector(selectFollows);
+  const isUnfollowing = followStatus === "loading";
 
   useEffect(() => {
     dispatch(fetchFollowedQuestions());
   }, [dispatch]);
+
+  const handleUnfollow = async (questionId: string) => {
+    try {
+      await dispatch(unfollowQuestionItem(questionId)).unwrap();
+      await dispatch(fetchFollowedQuestions());
+    } catch {
+      // errors handled in state
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -342,6 +353,16 @@ const Dashboard = () => {
                 meta={{ author: "Community", time: "Recently" }}
                 stats={{ answers: 0, views: 0, votes: question.vote_score }}
                 to={`/questions/${question.id}`}
+                action={
+                  <button
+                    type="button"
+                    className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                    onClick={() => handleUnfollow(question.id)}
+                    disabled={isUnfollowing}
+                  >
+                    {isUnfollowing ? "Updating..." : "Unfollow"}
+                  </button>
+                }
               />
             ))}
           </div>
