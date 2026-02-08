@@ -353,7 +353,11 @@ const QuestionDetail = () => {
             <EmptyState title="No related questions" description="Check back later." />
           ) : (
             relatedQuestions.map((related) => (
-              <QuestionCard key={related.question.id} {...related} />
+              <QuestionCard
+                key={related.question.id}
+                {...related}
+                to={`/questions/${related.question.id}`}
+              />
             ))
           )}
         </div>

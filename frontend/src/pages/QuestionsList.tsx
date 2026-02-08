@@ -149,6 +149,7 @@ const QuestionsList = () => {
             <QuestionCard
               key={question.question.id}
               {...question}
+              to={`/questions/${question.question.id}`}
               leading={<span className="text-sm font-semibold">{question.stats.votes}</span>}
             />
           ))}
