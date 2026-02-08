@@ -22,10 +22,11 @@ const QuestionCard = ({
   className,
 }: QuestionCardProps) => {
   const Wrapper: React.ElementType = href ? "a" : "div";
+  const wrapperProps = href ? { href } : {};
 
   return (
     <Wrapper
-      href={href}
+      {...wrapperProps}
       onClick={onClick}
       className={`block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-slate-300 focus-ring ${
         className ?? ""
