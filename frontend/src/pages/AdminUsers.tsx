@@ -1,6 +1,14 @@
+import { useEffect } from "react";
+
 import Badge from "../components/ui/Badge";
 import EmptyState from "../components/ui/EmptyState";
 import SectionCard from "../components/ui/SectionCard";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import {
+  fetchAdminUsers,
+  selectAdmin,
+  updateUserRoleItem,
+} from "../features/admin/adminSlice";
 import type { User } from "../types";
 
 const tabs = [
@@ -9,55 +17,29 @@ const tabs = [
   { label: "User Management", active: true },
 ];
 
-type UserRow = User & { questions: number; answers: number };
-
-const users: UserRow[] = [
-  {
-    id: "u-700",
-    full_name: "Sarah Chen",
-    email: "sarah@example.com",
-    role: "admin",
-    created_at: "2024-01-15T10:00:00Z",
-    updated_at: null,
-    questions: 45,
-    answers: 234,
-  },
-  {
-    id: "u-701",
-    full_name: "Michael Johnson",
-    email: "michael@example.com",
-    role: "admin",
-    created_at: "2024-01-12T09:00:00Z",
-    updated_at: null,
-    questions: 32,
-    answers: 198,
-  },
-  {
-    id: "u-702",
-    full_name: "Aisha Patel",
-    email: "aisha@example.com",
-    role: "student",
-    created_at: "2024-01-10T08:00:00Z",
-    updated_at: null,
-    questions: 28,
-    answers: 167,
-  },
-  {
-    id: "u-703",
-    full_name: "James Martinez",
-    email: "james@example.com",
-    role: "student",
-    created_at: "2024-01-08T08:00:00Z",
-    updated_at: null,
-    questions: 19,
-    answers: 143,
-  },
-];
-
 const roleVariant = (role: User["role"]) =>
   role === "admin" ? "accent" : "neutral";
 
 const AdminUsers = () => {
+  const dispatch = useAppDispatch();
+  const { users, usersStatus, usersError, updateRoleStatus, updateRoleError } =
+    useAppSelector(selectAdmin);
+  const isLoading = usersStatus === "loading" || usersStatus === "idle";
+  const isUpdating = updateRoleStatus === "loading";
+
+  useEffect(() => {
+    dispatch(fetchAdminUsers());
+  }, [dispatch]);
+
+  const handleRoleChange = async (userId: string, role: User["role"]) => {
+    try {
+      await dispatch(updateUserRoleItem({ userId, data: { role } })).unwrap();
+      await dispatch(fetchAdminUsers());
+    } catch {
+      // errors handled in state
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -86,17 +68,22 @@ const AdminUsers = () => {
 
       <SectionCard
         title="User Management"
-        subtitle="4 users total"
+        subtitle={`${users.length} users total`}
         action={
           <button
             type="button"
-            className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white focus-ring"
+            className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={isLoading}
           >
             Invite User
           </button>
         }
       >
-        {users.length === 0 ? (
+        {isLoading ? (
+          <EmptyState title="Loading users..." description="Fetching the latest users." />
+        ) : usersError ? (
+          <EmptyState title="Unable to load users" description={usersError} />
+        ) : users.length === 0 ? (
           <EmptyState
             title="No users yet"
             description="Invited users will show up here once they accept."
@@ -121,18 +108,39 @@ const AdminUsers = () => {
                     <p className="font-semibold text-slate-900">{user.full_name}</p>
                     <p className="text-xs text-slate-500">{user.email}</p>
                   </div>
-                  <Badge
-                    label={user.role}
-                    variant={roleVariant(user.role)}
-                    className="capitalize"
-                  />
-                  <span className="text-slate-600">{user.questions}</span>
-                  <span className="text-slate-600">{user.answers}</span>
+                  <div className="space-y-2">
+                    <Badge
+                      label={user.role}
+                      variant={roleVariant(user.role)}
+                      className="capitalize"
+                    />
+                    <select
+                      value={user.role}
+                      onChange={(event) =>
+                        handleRoleChange(user.id, event.target.value as User["role"])
+                      }
+                      className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600 focus-ring"
+                      disabled={isUpdating}
+                    >
+                      <option value="student">Student</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                  <span className="text-slate-600">N/A</span>
+                  <span className="text-slate-600">N/A</span>
                   <div className="flex items-center gap-3 text-slate-400">
-                    <button type="button" className="rounded-md text-sm text-slate-500 focus-ring">
+                    <button
+                      type="button"
+                      className="rounded-md text-sm text-slate-500 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled
+                    >
                       Edit
                     </button>
-                    <button type="button" className="rounded-md text-sm text-rose-500 focus-ring">
+                    <button
+                      type="button"
+                      className="rounded-md text-sm text-rose-500 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled
+                    >
                       Remove
                     </button>
                   </div>
@@ -141,6 +149,11 @@ const AdminUsers = () => {
             </div>
           </div>
         )}
+        {updateRoleError ? (
+          <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+            {updateRoleError}
+          </p>
+        ) : null}
       </SectionCard>
     </div>
   );

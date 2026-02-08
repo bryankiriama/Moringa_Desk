@@ -201,6 +201,7 @@ const Trending = () => {
                 stats={question.stats}
                 statusLabel={question.statusLabel}
                 statusVariant={question.statusVariant}
+                to={`/questions/${question.question.id}`}
                 leading={<span className="text-sm font-semibold">{question.rank}</span>}
                 action={
                   <span className="text-xs font-semibold text-indigo-600">

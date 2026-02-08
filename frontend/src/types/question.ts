@@ -10,3 +10,9 @@ export interface Question {
   updated_at: string;
   vote_score: number;
 }
+
+export interface QuestionDetail extends Question {
+  answers: import("./answer").Answer[];
+  tags: import("./tag").Tag[];
+  related_questions: Question[];
+}

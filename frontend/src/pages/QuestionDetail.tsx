@@ -1,142 +1,181 @@
+import { useEffect, useState, type FormEvent } from "react";
+import { useParams } from "react-router-dom";
+
 import Badge from "../components/ui/Badge";
+import EmptyState from "../components/ui/EmptyState";
 import QuestionCard from "../components/ui/QuestionCard";
 import SectionCard from "../components/ui/SectionCard";
 import TagChip from "../components/ui/TagChip";
-import type { Answer, QuestionCardData, Tag } from "../types";
-
-const question: QuestionCardData = {
-  question: {
-    id: "q-400",
-    author_id: "u-500",
-    title: "How to implement OAuth2 authentication in Django?",
-    body:
-      "I need to secure a Django API using OAuth2. What are the recommended packages and configuration steps?",
-    category: "Backend",
-    stage: "Intermediate",
-    accepted_answer_id: "a-600",
-    created_at: "2024-01-30T07:30:00Z",
-    updated_at: "2024-01-30T07:30:00Z",
-    vote_score: 24,
-  },
-  tags: [
-    { id: "t-python", name: "Python", created_at: "2024-01-01T00:00:00Z" },
-    { id: "t-django", name: "Django", created_at: "2024-01-01T00:00:00Z" },
-    {
-      id: "t-auth",
-      name: "Authentication",
-      created_at: "2024-01-01T00:00:00Z",
-    },
-  ] satisfies Tag[],
-  meta: { author: "John Doe", time: "2 hours ago" },
-  stats: { answers: 3, views: 124 },
-};
-
-type AnswerCardData = {
-  answer: Answer;
-  author: string;
-  time: string;
-};
-
-const answers: AnswerCardData[] = [
-  {
-    answer: {
-      id: "a-600",
-      question_id: "q-400",
-      author_id: "u-501",
-      body:
-        "Use a dedicated OAuth2 provider such as Django OAuth Toolkit. Configure your application and add the OAuth2 endpoints, then secure your views with the provided authentication classes.",
-      is_accepted: true,
-      created_at: "2024-01-30T08:05:00Z",
-      updated_at: "2024-01-30T08:05:00Z",
-      vote_score: 12,
-    },
-    author: "Sarah Chen",
-    time: "35 minutes ago",
-  },
-  {
-    answer: {
-      id: "a-601",
-      question_id: "q-400",
-      author_id: "u-502",
-      body:
-        "If you are already using DRF, consider integrating with OAuth2 libraries and follow the standard authorization code flow for frontend clients.",
-      is_accepted: false,
-      created_at: "2024-01-30T07:50:00Z",
-      updated_at: "2024-01-30T07:50:00Z",
-      vote_score: 5,
-    },
-    author: "Michael Johnson",
-    time: "1 hour ago",
-  },
-  {
-    answer: {
-      id: "a-602",
-      question_id: "q-400",
-      author_id: "u-503",
-      body:
-        "Another option is Auth0 or a hosted provider, which can simplify the token issuance and management.",
-      is_accepted: false,
-      created_at: "2024-01-30T07:40:00Z",
-      updated_at: "2024-01-30T07:40:00Z",
-      vote_score: 3,
-    },
-    author: "Aisha Patel",
-    time: "1 hour ago",
-  },
-];
-
-const relatedQuestions: QuestionCardData[] = [
-  {
-    question: {
-      id: "q-401",
-      author_id: "u-400",
-      title: "How to implement custom hooks in React for data fetching?",
-      body: "Trying to create a reusable hook for API fetching. What patterns do you recommend?",
-      category: "Frontend",
-      stage: "Intermediate",
-      accepted_answer_id: "a-610",
-      created_at: "2024-01-29T12:00:00Z",
-      updated_at: "2024-01-29T12:00:00Z",
-      vote_score: 24,
-    },
-    tags: [
-      { id: "t-react", name: "React", created_at: "2024-01-01T00:00:00Z" },
-      {
-        id: "t-js",
-        name: "JavaScript",
-        created_at: "2024-01-01T00:00:00Z",
-      },
-      { id: "t-hooks", name: "Hooks", created_at: "2024-01-01T00:00:00Z" },
-    ],
-    meta: { author: "Sarah Chen", time: "2 hours ago" },
-    stats: { answers: 5, views: 342, votes: 24 },
-    statusLabel: "Answered",
-    statusVariant: "success",
-  },
-  {
-    question: {
-      id: "q-402",
-      author_id: "u-405",
-      title: "Best practices for API versioning in REST APIs",
-      body: "Should I use URL versioning, header versioning, or something else?",
-      category: "Backend",
-      stage: "Advanced",
-      accepted_answer_id: null,
-      created_at: "2024-01-28T12:00:00Z",
-      updated_at: "2024-01-28T12:00:00Z",
-      vote_score: 15,
-    },
-    tags: [
-      { id: "t-api", name: "API", created_at: "2024-01-01T00:00:00Z" },
-      { id: "t-rest", name: "REST", created_at: "2024-01-01T00:00:00Z" },
-      { id: "t-backend", name: "Backend", created_at: "2024-01-01T00:00:00Z" },
-    ],
-    meta: { author: "James Martinez", time: "1 day ago" },
-    stats: { answers: 4, views: 198, votes: 15 },
-  },
-];
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import {
+  acceptAnswerItem,
+  createAnswerItem,
+  fetchAnswers,
+  selectAnswers,
+} from "../features/answers/answersSlice";
+import { createFlagItem, selectFlags } from "../features/flags/flagsSlice";
+import {
+  fetchQuestionDetail,
+  selectQuestions,
+} from "../features/questions/questionsSlice";
+import { castVoteItem, selectVotes } from "../features/votes/votesSlice";
+import type { QuestionCardData, Tag } from "../types";
 
 const QuestionDetail = () => {
+  const { questionId } = useParams();
+  const dispatch = useAppDispatch();
+  const { detail, detailStatus, detailError } = useAppSelector(selectQuestions);
+  const {
+    items: answers,
+    status: answersStatus,
+    error: answersError,
+    createStatus,
+    createError,
+    acceptStatus,
+    acceptError,
+  } = useAppSelector(selectAnswers);
+  const { status: voteStatus, error: voteError } = useAppSelector(selectVotes);
+  const { status: flagStatus, error: flagError } = useAppSelector(selectFlags);
+  const [answerBody, setAnswerBody] = useState("");
+  const isVoting = voteStatus === "loading";
+  const isFlagging = flagStatus === "loading";
+
+  useEffect(() => {
+    if (questionId) {
+      dispatch(fetchQuestionDetail(questionId));
+      dispatch(fetchAnswers(questionId));
+    }
+  }, [dispatch, questionId]);
+
+  if (!questionId) {
+    return <EmptyState title="Question not found" description="Missing question id." />;
+  }
+
+  if (detailStatus === "loading" || detailStatus === "idle") {
+    return <EmptyState title="Loading question..." description="Fetching details." />;
+  }
+
+  if (detailStatus === "failed" || !detail) {
+    return (
+      <EmptyState
+        title="Unable to load question"
+        description={detailError ?? "Please try again later."}
+      />
+    );
+  }
+
+  const question: QuestionCardData = {
+    question: detail,
+    tags: detail.tags,
+    meta: { author: "Community Member", time: "Recently" },
+    stats: { answers: answers.length, views: 0 },
+  };
+
+  const relatedQuestions: QuestionCardData[] = detail.related_questions.map(
+    (related) => ({
+      question: related,
+      tags: [] as Tag[],
+      meta: { author: "Community Member", time: "Recently" },
+      stats: { answers: 0, views: 0, votes: related.vote_score },
+      statusLabel: related.accepted_answer_id ? "Answered" : undefined,
+      statusVariant: related.accepted_answer_id ? "success" : undefined,
+    })
+  );
+
+  const handleSubmitAnswer = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!questionId) {
+      return;
+    }
+    try {
+      await dispatch(
+        createAnswerItem({ questionId, data: { body: answerBody } })
+      ).unwrap();
+      setAnswerBody("");
+      await dispatch(fetchAnswers(questionId));
+      await dispatch(fetchQuestionDetail(questionId));
+    } catch {
+      // errors handled in state
+    }
+  };
+
+  const handleAcceptAnswer = async (answerId: string) => {
+    if (!questionId) {
+      return;
+    }
+    try {
+      await dispatch(acceptAnswerItem({ questionId, answerId })).unwrap();
+      await dispatch(fetchAnswers(questionId));
+      await dispatch(fetchQuestionDetail(questionId));
+    } catch {
+      // errors handled in state
+    }
+  };
+
+  const handleVoteQuestion = async (value: 1 | -1) => {
+    if (!questionId) {
+      return;
+    }
+    try {
+      await dispatch(
+        castVoteItem({ target_type: "question", target_id: questionId, value })
+      ).unwrap();
+      await dispatch(fetchQuestionDetail(questionId));
+    } catch {
+      // errors handled in state
+    }
+  };
+
+  const handleVoteAnswer = async (answerId: string, value: 1 | -1) => {
+    if (!questionId) {
+      return;
+    }
+    try {
+      await dispatch(
+        castVoteItem({ target_type: "answer", target_id: answerId, value })
+      ).unwrap();
+      await dispatch(fetchAnswers(questionId));
+    } catch {
+      // errors handled in state
+    }
+  };
+
+  const handleFlagQuestion = async () => {
+    if (!questionId) {
+      return;
+    }
+    try {
+      await dispatch(
+        createFlagItem({
+          target_type: "question",
+          target_id: questionId,
+          reason: "Inappropriate content",
+        })
+      ).unwrap();
+      await dispatch(fetchQuestionDetail(questionId));
+    } catch {
+      // errors handled in state
+    }
+  };
+
+  const handleFlagAnswer = async (answerId: string) => {
+    if (!questionId) {
+      return;
+    }
+    try {
+      await dispatch(
+        createFlagItem({
+          target_type: "answer",
+          target_id: answerId,
+          reason: "Inappropriate content",
+        })
+      ).unwrap();
+      await dispatch(fetchAnswers(questionId));
+    } catch {
+      // errors handled in state
+    }
+  };
+
   return (
     <div className="space-y-6">
       <SectionCard title="Question Detail" subtitle="Asked by a community member">
@@ -148,7 +187,9 @@ const QuestionDetail = () => {
               </h1>
               <p className="mt-2 text-sm text-slate-500">{question.question.body}</p>
             </div>
-            <Badge label="Answered" variant="success" />
+            {question.question.accepted_answer_id ? (
+              <Badge label="Answered" variant="success" />
+            ) : null}
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -167,51 +208,158 @@ const QuestionDetail = () => {
             <span>{question.question.vote_score} votes</span>
           </div>
 
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={() => handleVoteQuestion(1)}
+              disabled={isVoting}
+            >
+              Upvote
+            </button>
+            <button
+              type="button"
+              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={() => handleVoteQuestion(-1)}
+              disabled={isVoting}
+            >
+              Downvote
+            </button>
+            <button
+              type="button"
+              className="rounded-full border border-rose-200 px-3 py-1 text-xs font-medium text-rose-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={handleFlagQuestion}
+              disabled={isFlagging}
+            >
+              Flag
+            </button>
+          </div>
+
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-            <p>
-              I&apos;m implementing OAuth2 for a Django REST API and want to follow best
-              practices for production. Which libraries are most commonly used, and how
-              do you handle token refresh and client credentials in a secure way?
-            </p>
-            <p className="mt-3">
-              I&apos;ve reviewed the OAuth2 grant types and understand the flow, but I&apos;m
-              unsure how to structure the settings and middleware. Any examples or
-              pointers would be appreciated.
-            </p>
+            <p>{detail.body}</p>
           </div>
         </div>
       </SectionCard>
 
       <SectionCard title="Answers" subtitle={`${answers.length} answers`}>
         <div className="space-y-4">
-          {answers.map((answer) => (
-            <div
-              key={answer.answer.id}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold text-slate-900">{answer.author}</p>
-                  <p className="text-xs text-slate-500">{answer.time}</p>
+          {answersStatus === "loading" || answersStatus === "idle" ? (
+            <EmptyState title="Loading answers..." description="Fetching replies." />
+          ) : answersError ? (
+            <EmptyState title="Unable to load answers" description={answersError} />
+          ) : answers.length === 0 ? (
+            <EmptyState title="No answers yet" description="Be the first to help." />
+          ) : (
+            answers.map((answer) => (
+              <div
+                key={answer.id}
+                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">
+                      Community Member
+                    </p>
+                    <p className="text-xs text-slate-500">Recently</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge label={`${answer.vote_score} votes`} variant="neutral" />
+                    {answer.is_accepted ? (
+                      <Badge label="Accepted" variant="success" />
+                    ) : (
+                      <button
+                        type="button"
+                        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                        onClick={() => handleAcceptAnswer(answer.id)}
+                        disabled={acceptStatus === "loading" || isVoting || isFlagging}
+                      >
+                        {acceptStatus === "loading" ? "Accepting..." : "Accept answer"}
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge label={`${answer.answer.vote_score} votes`} variant="neutral" />
-                  {answer.answer.is_accepted ? (
-                    <Badge label="Accepted" variant="success" />
-                  ) : null}
+                <p className="mt-3 text-sm text-slate-600">{answer.body}</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                    onClick={() => handleVoteAnswer(answer.id, 1)}
+                    disabled={isVoting}
+                  >
+                    Upvote
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                    onClick={() => handleVoteAnswer(answer.id, -1)}
+                    disabled={isVoting}
+                  >
+                    Downvote
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-full border border-rose-200 px-3 py-1 text-xs font-medium text-rose-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                    onClick={() => handleFlagAnswer(answer.id)}
+                    disabled={isFlagging}
+                  >
+                    Flag
+                  </button>
                 </div>
               </div>
-              <p className="mt-3 text-sm text-slate-600">{answer.answer.body}</p>
-            </div>
-          ))}
+            ))
+          )}
+          {acceptError ? (
+            <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+              {acceptError}
+            </p>
+          ) : null}
+          {voteError || flagError ? (
+            <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+              {voteError ?? flagError}
+            </p>
+          ) : null}
         </div>
+      </SectionCard>
+
+      <SectionCard title="Post an Answer" subtitle="Share your solution with the community">
+        <form className="space-y-4" onSubmit={handleSubmitAnswer}>
+          <textarea
+            rows={5}
+            placeholder="Write your answer here..."
+            value={answerBody}
+            onChange={(event) => setAnswerBody(event.target.value)}
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
+          />
+          <div className="flex items-center justify-end">
+            <button
+              type="submit"
+              className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-medium text-white focus-ring disabled:cursor-not-allowed disabled:opacity-70"
+              disabled={createStatus === "loading" || answerBody.trim().length === 0}
+            >
+              {createStatus === "loading" ? "Posting..." : "Post Answer"}
+            </button>
+          </div>
+          {createError ? (
+            <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+              {createError}
+            </p>
+          ) : null}
+        </form>
       </SectionCard>
 
       <SectionCard title="Related Questions" subtitle="You may also find these helpful">
         <div className="space-y-4">
-          {relatedQuestions.map((related) => (
-            <QuestionCard key={related.question.id} {...related} />
-          ))}
+          {relatedQuestions.length === 0 ? (
+            <EmptyState title="No related questions" description="Check back later." />
+          ) : (
+            relatedQuestions.map((related) => (
+              <QuestionCard
+                key={related.question.id}
+                {...related}
+                to={`/questions/${related.question.id}`}
+              />
+            ))
+          )}
         </div>
       </SectionCard>
     </div>

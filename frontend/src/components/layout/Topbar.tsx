@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Link } from "react-router-dom";
 
 type TopbarProps = {
   onMenuClick?: () => void;
@@ -37,14 +38,15 @@ const Topbar = ({ onMenuClick, placeholder, title }: TopbarProps) => {
             <input
               type="search"
               placeholder={searchPlaceholder}
+              aria-label="Search"
               className="w-full rounded-full border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-700 shadow-sm focus-ring focus:border-indigo-300"
             />
           </div>
         </div>
 
         <div className="ml-auto flex items-center gap-3">
-          <button
-            type="button"
+          <Link
+            to="/notifications"
             className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 focus-ring"
             aria-label="Notifications"
           >
@@ -52,11 +54,13 @@ const Topbar = ({ onMenuClick, placeholder, title }: TopbarProps) => {
             <span className="absolute -right-1 -top-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[11px] font-semibold text-white">
               3
             </span>
-          </button>
+          </Link>
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 focus-ring"
-            aria-label="Settings"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+            aria-label="Settings (coming soon)"
+            title="Settings (coming soon)"
+            disabled
           >
             <SettingsIcon />
           </button>

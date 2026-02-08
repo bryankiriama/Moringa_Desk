@@ -1,10 +1,12 @@
+import { Link } from "react-router-dom";
+
 import type { QuestionCardData } from "../../types";
 import Badge from "./Badge";
 import TagChip from "./TagChip";
 
 type QuestionCardProps = QuestionCardData & {
+  to?: string;
   href?: string;
-  onClick?: () => void;
   className?: string;
 };
 
@@ -17,17 +19,13 @@ const QuestionCard = ({
   statusVariant = "success",
   leading,
   action,
+  to,
   href,
-  onClick,
   className,
 }: QuestionCardProps) => {
-  const Wrapper: React.ElementType = href ? "a" : "div";
-
   return (
-    <Wrapper
-      href={href}
-      onClick={onClick}
-      className={`block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-slate-300 focus-ring ${
+    <div
+      className={`block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-slate-300 focus-within:ring-2 focus-within:ring-indigo-200 ${
         className ?? ""
       }`}
     >
@@ -40,7 +38,25 @@ const QuestionCard = ({
           ) : null}
           <div>
             <h3 className="text-base font-semibold text-slate-900">
-              {question.title}
+              {to ? (
+                <Link
+                  to={to}
+                  className="rounded-sm focus-ring"
+                  aria-label={`View question: ${question.title}`}
+                >
+                  {question.title}
+                </Link>
+              ) : href ? (
+                <a
+                  href={href}
+                  className="rounded-sm focus-ring"
+                  aria-label={`View question: ${question.title}`}
+                >
+                  {question.title}
+                </a>
+              ) : (
+                question.title
+              )}
             </h3>
             <p className="mt-2 text-sm text-slate-500">{question.body}</p>
           </div>
@@ -71,7 +87,7 @@ const QuestionCard = ({
           {action ? <span className="ml-2">{action}</span> : null}
         </div>
       </div>
-    </Wrapper>
+    </div>
   );
 };
 

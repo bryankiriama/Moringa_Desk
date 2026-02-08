@@ -1,8 +1,14 @@
+import { useEffect } from "react";
+
 import Badge from "../components/ui/Badge";
 import EmptyState from "../components/ui/EmptyState";
 import Pagination from "../components/ui/Pagination";
 import QuestionCard from "../components/ui/QuestionCard";
 import TagChip from "../components/ui/TagChip";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { createFlagItem, selectFlags } from "../features/flags/flagsSlice";
+import { fetchQuestions, selectQuestions } from "../features/questions/questionsSlice";
+import { castVoteItem, selectVotes } from "../features/votes/votesSlice";
 import type { QuestionCardData, TagChipData } from "../types";
 
 const filters: TagChipData[] = [
@@ -21,106 +27,83 @@ const tagFilters: TagChipData[] = [
   { label: "API" },
 ];
 
-const questions: QuestionCardData[] = [
-  {
-    question: {
-      id: "q-300",
-      author_id: "u-400",
-      title: "How to implement custom hooks in React for data fetching?",
-      body:
-        "I am trying to create a reusable custom hook for fetching data from an API. What are the best practices for error handling and loading states?",
-      category: "Frontend",
-      stage: "Intermediate",
-      accepted_answer_id: "a-500",
-      created_at: "2024-01-29T12:00:00Z",
-      updated_at: "2024-01-29T12:00:00Z",
-      vote_score: 24,
-    },
-    tags: [
-      { id: "t-react", name: "React", created_at: "2024-01-01T00:00:00Z" },
-      {
-        id: "t-js",
-        name: "JavaScript",
-        created_at: "2024-01-01T00:00:00Z",
-      },
-      { id: "t-hooks", name: "Hooks", created_at: "2024-01-01T00:00:00Z" },
-    ],
-    meta: { author: "Sarah Chen", time: "2 hours ago" },
-    stats: { answers: 5, views: 342, votes: 24 },
-    statusLabel: "Answered",
-    statusVariant: "success",
-  },
-  {
-    question: {
-      id: "q-301",
-      author_id: "u-401",
-      title: "Understanding PostgreSQL indexing strategies",
-      body:
-        "What are the differences between B-tree, Hash, and GIN indexes? When should I use each type for optimal query performance?",
-      category: "Databases",
-      stage: "Intermediate",
-      accepted_answer_id: "a-501",
-      created_at: "2024-01-29T09:00:00Z",
-      updated_at: "2024-01-29T09:00:00Z",
-      vote_score: 18,
-    },
-    tags: [
-      {
-        id: "t-db",
-        name: "Databases",
-        created_at: "2024-01-01T00:00:00Z",
-      },
-      {
-        id: "t-pg",
-        name: "PostgreSQL",
-        created_at: "2024-01-01T00:00:00Z",
-      },
-      {
-        id: "t-perf",
-        name: "Performance",
-        created_at: "2024-01-01T00:00:00Z",
-      },
-    ],
-    meta: { author: "Michael Johnson", time: "5 hours ago" },
-    stats: { answers: 3, views: 256, votes: 18 },
-    statusLabel: "Answered",
-    statusVariant: "success",
-  },
-  {
-    question: {
-      id: "q-302",
-      author_id: "u-402",
-      title: "Debugging memory leaks in Python applications",
-      body:
-        "My Python application is experiencing memory leaks. What tools and techniques can I use to identify and fix them?",
-      category: "Backend",
-      stage: "Advanced",
-      accepted_answer_id: "a-502",
-      created_at: "2024-01-29T06:00:00Z",
-      updated_at: "2024-01-29T06:00:00Z",
-      vote_score: 32,
-    },
-    tags: [
-      { id: "t-python", name: "Python", created_at: "2024-01-01T00:00:00Z" },
-      {
-        id: "t-debug",
-        name: "Debugging",
-        created_at: "2024-01-01T00:00:00Z",
-      },
-      {
-        id: "t-perf",
-        name: "Performance",
-        created_at: "2024-01-01T00:00:00Z",
-      },
-    ],
-    meta: { author: "Aisha Patel", time: "8 hours ago" },
-    stats: { answers: 7, views: 487, votes: 32 },
-    statusLabel: "Answered",
-    statusVariant: "success",
-  },
-];
-
 const QuestionsList = () => {
+  const dispatch = useAppDispatch();
+  const { items, status, error } = useAppSelector(selectQuestions);
+  const { status: voteStatus, error: voteError } = useAppSelector(selectVotes);
+  const { status: flagStatus, error: flagError } = useAppSelector(selectFlags);
+  const isVoting = voteStatus === "loading";
+  const isFlagging = flagStatus === "loading";
+
+  useEffect(() => {
+    dispatch(fetchQuestions(undefined));
+  }, [dispatch]);
+
+  const handleVote = async (questionId: string, value: 1 | -1) => {
+    try {
+      await dispatch(
+        castVoteItem({ target_type: "question", target_id: questionId, value })
+      ).unwrap();
+      await dispatch(fetchQuestions(undefined));
+    } catch {
+      // errors handled in state
+    }
+  };
+
+  const handleFlag = async (questionId: string) => {
+    try {
+      await dispatch(
+        createFlagItem({
+          target_type: "question",
+          target_id: questionId,
+          reason: "Inappropriate content",
+        })
+      ).unwrap();
+      await dispatch(fetchQuestions(undefined));
+    } catch {
+      // errors handled in state
+    }
+  };
+
+  const renderActions = (questionId: string) => (
+    <span className="inline-flex items-center gap-2">
+      <button
+        type="button"
+        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+        onClick={() => handleVote(questionId, 1)}
+        disabled={isVoting}
+      >
+        Upvote
+      </button>
+      <button
+        type="button"
+        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+        onClick={() => handleVote(questionId, -1)}
+        disabled={isVoting}
+      >
+        Downvote
+      </button>
+      <button
+        type="button"
+        className="rounded-full border border-rose-200 px-3 py-1 text-xs font-medium text-rose-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+        onClick={() => handleFlag(questionId)}
+        disabled={isFlagging}
+      >
+        Flag
+      </button>
+    </span>
+  );
+
+  const questionCards: QuestionCardData[] = items.map((question) => ({
+    question,
+    tags: [],
+    meta: { author: "Community Member", time: "Recently" },
+    stats: { answers: 0, views: 0, votes: question.vote_score },
+    statusLabel: question.accepted_answer_id ? "Answered" : undefined,
+    statusVariant: question.accepted_answer_id ? "success" : undefined,
+    action: renderActions(question.id),
+  }));
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -150,7 +133,11 @@ const QuestionsList = () => {
         ))}
       </div>
 
-      {questions.length === 0 ? (
+      {status === "loading" || status === "idle" ? (
+        <EmptyState title="Loading questions..." description="Fetching the latest posts." />
+      ) : error ? (
+        <EmptyState title="Unable to load questions" description={error} />
+      ) : questionCards.length === 0 ? (
         <EmptyState
           title="No questions yet"
           description="New questions will appear here once the community starts posting."
@@ -158,15 +145,22 @@ const QuestionsList = () => {
         />
       ) : (
         <div className="space-y-5">
-          {questions.map((question) => (
+          {questionCards.map((question) => (
             <QuestionCard
               key={question.question.id}
               {...question}
+              to={`/questions/${question.question.id}`}
               leading={<span className="text-sm font-semibold">{question.stats.votes}</span>}
             />
           ))}
         </div>
       )}
+
+      {voteError || flagError ? (
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+          {voteError ?? flagError}
+        </p>
+      ) : null}
 
       <div className="flex items-center justify-center">
         <Pagination currentPage={1} totalPages={3} />

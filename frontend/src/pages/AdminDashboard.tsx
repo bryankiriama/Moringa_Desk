@@ -193,7 +193,11 @@ const AdminDashboard = () => {
         >
           <div className="space-y-4">
             {unansweredQuestions.map((question) => (
-              <QuestionCard key={question.question.id} {...question} />
+              <QuestionCard
+                key={question.question.id}
+                {...question}
+                to={`/questions/${question.question.id}`}
+              />
             ))}
           </div>
         </SectionCard>

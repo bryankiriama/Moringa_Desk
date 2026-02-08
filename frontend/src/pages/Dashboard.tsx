@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 import Badge from "../components/ui/Badge";
 import MetricCard from "../components/ui/MetricCard";
 import QuestionCard from "../components/ui/QuestionCard";
@@ -147,12 +149,12 @@ const Dashboard = () => {
               knowledge, and grow your skills together.
             </p>
           </div>
-          <button
-            type="button"
+          <Link
+            to="/questions/ask"
             className="rounded-full border border-white/40 px-5 py-2 text-sm font-medium focus-ring"
           >
-            Explore Dashboard
-          </button>
+            Ask Question
+          </Link>
         </div>
         <div className="mt-6 grid gap-4 text-sm text-white/80 md:grid-cols-3">
           <div className="flex items-center gap-3">
@@ -288,7 +290,11 @@ const Dashboard = () => {
         >
           <div className="space-y-4">
             {unansweredQuestions.map((question) => (
-              <QuestionCard key={question.question.id} {...question} />
+              <QuestionCard
+                key={question.question.id}
+                {...question}
+                to={`/questions/${question.question.id}`}
+              />
             ))}
           </div>
         </SectionCard>
