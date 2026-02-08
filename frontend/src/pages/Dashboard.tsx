@@ -1,9 +1,16 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 import Badge from "../components/ui/Badge";
+import EmptyState from "../components/ui/EmptyState";
 import MetricCard from "../components/ui/MetricCard";
 import QuestionCard from "../components/ui/QuestionCard";
 import SectionCard from "../components/ui/SectionCard";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import {
+  fetchFollowedQuestions,
+  selectFollows,
+} from "../features/follows/followsSlice";
 import type { MetricCardData, QuestionCardData } from "../types";
 
 const metrics: MetricCardData[] = [
@@ -133,6 +140,14 @@ const unansweredQuestions: QuestionCardData[] = [
 ];
 
 const Dashboard = () => {
+  const dispatch = useAppDispatch();
+  const { items: followedQuestions, listStatus, listError } =
+    useAppSelector(selectFollows);
+
+  useEffect(() => {
+    dispatch(fetchFollowedQuestions());
+  }, [dispatch]);
+
   return (
     <div className="space-y-8">
       <section className="rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-emerald-600 p-8 text-white shadow-sm">
@@ -299,6 +314,39 @@ const Dashboard = () => {
           </div>
         </SectionCard>
       </section>
+
+      <SectionCard
+        title="Following"
+        subtitle="Questions you are tracking"
+      >
+        {listStatus === "loading" || listStatus === "idle" ? (
+          <EmptyState
+            title="Loading followed questions..."
+            description="Fetching your followed list."
+          />
+        ) : listError ? (
+          <EmptyState title="Unable to load followed questions" description={listError} />
+        ) : followedQuestions.length === 0 ? (
+          <EmptyState
+            title="No followed questions"
+            description="Follow a question to track updates."
+            actionLabel="Browse Questions"
+          />
+        ) : (
+          <div className="space-y-4">
+            {followedQuestions.map((question) => (
+              <QuestionCard
+                key={question.id}
+                question={question}
+                tags={[]}
+                meta={{ author: "Community", time: "Recently" }}
+                stats={{ answers: 0, views: 0, votes: question.vote_score }}
+                to={`/questions/${question.id}`}
+              />
+            ))}
+          </div>
+        )}
+      </SectionCard>
 
       <SectionCard
         title="Platform Health Score"

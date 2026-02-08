@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
 import type { RootState } from "../../app/store";
+import type { Question } from "../../types";
 import { followQuestion, listMyFollows, unfollowQuestion } from "../../api/follows";
 
 type LoadStatus = "idle" | "loading" | "succeeded" | "failed";
@@ -11,6 +12,9 @@ type FollowsState = {
   status: LoadStatus;
   error: string | null;
   activeQuestionId: string | null;
+  items: Question[];
+  listStatus: LoadStatus;
+  listError: string | null;
 };
 
 const initialState: FollowsState = {
@@ -18,6 +22,9 @@ const initialState: FollowsState = {
   status: "idle",
   error: null,
   activeQuestionId: null,
+  items: [],
+  listStatus: "idle",
+  listError: null,
 };
 
 const getErrorMessage = (error: unknown) => {
@@ -45,6 +52,18 @@ export const followQuestionItem = createAsyncThunk(
   }
 );
 
+export const unfollowQuestionItem = createAsyncThunk(
+  "follows/unfollow",
+  async (questionId: string, { rejectWithValue }) => {
+    try {
+      await unfollowQuestion(questionId);
+      return false;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  }
+);
+
 export const fetchFollowStatus = createAsyncThunk(
   "follows/status",
   async (questionId: string, { rejectWithValue }) => {
@@ -57,12 +76,11 @@ export const fetchFollowStatus = createAsyncThunk(
   }
 );
 
-export const unfollowQuestionItem = createAsyncThunk(
-  "follows/unfollow",
-  async (questionId: string, { rejectWithValue }) => {
+export const fetchFollowedQuestions = createAsyncThunk(
+  "follows/list",
+  async (_, { rejectWithValue }) => {
     try {
-      await unfollowQuestion(questionId);
-      return false;
+      return await listMyFollows();
     } catch (error) {
       return rejectWithValue(getErrorMessage(error));
     }
@@ -92,6 +110,19 @@ const followsSlice = createSlice({
         state.status = "failed";
         state.error =
           (action.payload as string) ?? "Failed to load follow status";
+      })
+      .addCase(fetchFollowedQuestions.pending, (state) => {
+        state.listStatus = "loading";
+        state.listError = null;
+      })
+      .addCase(fetchFollowedQuestions.fulfilled, (state, action) => {
+        state.listStatus = "succeeded";
+        state.items = action.payload;
+      })
+      .addCase(fetchFollowedQuestions.rejected, (state, action) => {
+        state.listStatus = "failed";
+        state.listError =
+          (action.payload as string) ?? "Failed to load followed questions";
       })
       .addCase(followQuestionItem.pending, (state) => {
         state.status = "loading";
