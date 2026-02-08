@@ -66,7 +66,7 @@ const QuestionsList = () => {
   };
 
   const renderActions = (questionId: string) => (
-    <div className="flex items-center gap-2">
+    <span className="inline-flex items-center gap-2">
       <button
         type="button"
         className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
@@ -91,7 +91,7 @@ const QuestionsList = () => {
       >
         Flag
       </button>
-    </div>
+    </span>
   );
 
   const questionCards: QuestionCardData[] = items.map((question) => ({
