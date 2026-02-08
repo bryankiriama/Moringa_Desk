@@ -1,7 +1,12 @@
-import type { FAQ, User } from "../types";
+import { apiClient } from "./client";
+import type { FAQ, Tag, User } from "../types";
 
 export type UserRoleUpdateRequest = {
   role: "student" | "admin";
+};
+
+export type TagCreateRequest = {
+  name: string;
 };
 
 export type FAQCreateRequest = {
@@ -9,22 +14,35 @@ export type FAQCreateRequest = {
   answer: string;
 };
 
-// TODO: Implement API calls
 export const listUsers = async (): Promise<User[]> => {
-  throw new Error("Not implemented");
+  const response = await apiClient.get<User[]>("/admin/users");
+  return response.data;
 };
 
 export const updateUserRole = async (
-  _userId: string,
-  _payload: UserRoleUpdateRequest
+  userId: string,
+  payload: UserRoleUpdateRequest
 ): Promise<User> => {
-  throw new Error("Not implemented");
+  const response = await apiClient.patch<User>(`/admin/users/${userId}`, payload);
+  return response.data;
+};
+
+export const listTags = async (): Promise<Tag[]> => {
+  const response = await apiClient.get<Tag[]>("/tags");
+  return response.data;
+};
+
+export const createTag = async (payload: TagCreateRequest): Promise<Tag> => {
+  const response = await apiClient.post<Tag>("/tags", payload);
+  return response.data;
 };
 
 export const listFaqs = async (): Promise<FAQ[]> => {
-  throw new Error("Not implemented");
+  const response = await apiClient.get<FAQ[]>("/faqs");
+  return response.data;
 };
 
-export const createFaq = async (_payload: FAQCreateRequest): Promise<FAQ> => {
-  throw new Error("Not implemented");
+export const createFaq = async (payload: FAQCreateRequest): Promise<FAQ> => {
+  const response = await apiClient.post<FAQ>("/faqs", payload);
+  return response.data;
 };
