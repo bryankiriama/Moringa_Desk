@@ -15,6 +15,12 @@ import {
 } from "../features/answers/answersSlice";
 import { createFlagItem, selectFlags } from "../features/flags/flagsSlice";
 import {
+  fetchFollowStatus,
+  followQuestionItem,
+  selectFollows,
+  unfollowQuestionItem,
+} from "../features/follows/followsSlice";
+import {
   fetchQuestionDetail,
   selectQuestions,
 } from "../features/questions/questionsSlice";
@@ -36,14 +42,18 @@ const QuestionDetail = () => {
   } = useAppSelector(selectAnswers);
   const { status: voteStatus, error: voteError } = useAppSelector(selectVotes);
   const { status: flagStatus, error: flagError } = useAppSelector(selectFlags);
+  const { isFollowing, status: followStatus, error: followError } =
+    useAppSelector(selectFollows);
   const [answerBody, setAnswerBody] = useState("");
   const isVoting = voteStatus === "loading";
   const isFlagging = flagStatus === "loading";
+  const isFollowingBusy = followStatus === "loading";
 
   useEffect(() => {
     if (questionId) {
       dispatch(fetchQuestionDetail(questionId));
       dispatch(fetchAnswers(questionId));
+      dispatch(fetchFollowStatus(questionId));
     }
   }, [dispatch, questionId]);
 
@@ -176,6 +186,21 @@ const QuestionDetail = () => {
     }
   };
 
+  const handleToggleFollow = async () => {
+    if (!questionId) {
+      return;
+    }
+    try {
+      if (isFollowing) {
+        await dispatch(unfollowQuestionItem(questionId)).unwrap();
+      } else {
+        await dispatch(followQuestionItem(questionId)).unwrap();
+      }
+    } catch {
+      // errors handled in state
+    }
+  };
+
   return (
     <div className="space-y-6">
       <SectionCard title="Question Detail" subtitle="Asked by a community member">
@@ -233,7 +258,23 @@ const QuestionDetail = () => {
             >
               Flag
             </button>
+            <button
+              type="button"
+              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={handleToggleFollow}
+              disabled={isFollowingBusy}
+            >
+              {isFollowingBusy
+                ? "Updating..."
+                : isFollowing
+                  ? "Unfollow"
+                  : "Follow"}
+            </button>
           </div>
+
+          {followError ? (
+            <p className="text-sm text-rose-600">{followError}</p>
+          ) : null}
 
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
             <p>{detail.body}</p>
