@@ -13,10 +13,12 @@ import {
   fetchAnswers,
   selectAnswers,
 } from "../features/answers/answersSlice";
+import { createFlagItem, selectFlags } from "../features/flags/flagsSlice";
 import {
   fetchQuestionDetail,
   selectQuestions,
 } from "../features/questions/questionsSlice";
+import { castVoteItem, selectVotes } from "../features/votes/votesSlice";
 import type { QuestionCardData, Tag } from "../types";
 
 const QuestionDetail = () => {
@@ -32,7 +34,11 @@ const QuestionDetail = () => {
     acceptStatus,
     acceptError,
   } = useAppSelector(selectAnswers);
+  const { status: voteStatus, error: voteError } = useAppSelector(selectVotes);
+  const { status: flagStatus, error: flagError } = useAppSelector(selectFlags);
   const [answerBody, setAnswerBody] = useState("");
+  const isVoting = voteStatus === "loading";
+  const isFlagging = flagStatus === "loading";
 
   useEffect(() => {
     if (questionId) {
@@ -106,6 +112,70 @@ const QuestionDetail = () => {
     }
   };
 
+  const handleVoteQuestion = async (value: 1 | -1) => {
+    if (!questionId) {
+      return;
+    }
+    try {
+      await dispatch(
+        castVoteItem({ target_type: "question", target_id: questionId, value })
+      ).unwrap();
+      await dispatch(fetchQuestionDetail(questionId));
+    } catch {
+      // errors handled in state
+    }
+  };
+
+  const handleVoteAnswer = async (answerId: string, value: 1 | -1) => {
+    if (!questionId) {
+      return;
+    }
+    try {
+      await dispatch(
+        castVoteItem({ target_type: "answer", target_id: answerId, value })
+      ).unwrap();
+      await dispatch(fetchAnswers(questionId));
+    } catch {
+      // errors handled in state
+    }
+  };
+
+  const handleFlagQuestion = async () => {
+    if (!questionId) {
+      return;
+    }
+    try {
+      await dispatch(
+        createFlagItem({
+          target_type: "question",
+          target_id: questionId,
+          reason: "Inappropriate content",
+        })
+      ).unwrap();
+      await dispatch(fetchQuestionDetail(questionId));
+    } catch {
+      // errors handled in state
+    }
+  };
+
+  const handleFlagAnswer = async (answerId: string) => {
+    if (!questionId) {
+      return;
+    }
+    try {
+      await dispatch(
+        createFlagItem({
+          target_type: "answer",
+          target_id: answerId,
+          reason: "Inappropriate content",
+        })
+      ).unwrap();
+      await dispatch(fetchAnswers(questionId));
+    } catch {
+      // errors handled in state
+    }
+  };
+
   return (
     <div className="space-y-6">
       <SectionCard title="Question Detail" subtitle="Asked by a community member">
@@ -136,6 +206,33 @@ const QuestionDetail = () => {
             <span>{question.stats.views} views</span>
             <span>•</span>
             <span>{question.question.vote_score} votes</span>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={() => handleVoteQuestion(1)}
+              disabled={isVoting}
+            >
+              Upvote
+            </button>
+            <button
+              type="button"
+              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={() => handleVoteQuestion(-1)}
+              disabled={isVoting}
+            >
+              Downvote
+            </button>
+            <button
+              type="button"
+              className="rounded-full border border-rose-200 px-3 py-1 text-xs font-medium text-rose-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={handleFlagQuestion}
+              disabled={isFlagging}
+            >
+              Flag
+            </button>
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
@@ -174,7 +271,7 @@ const QuestionDetail = () => {
                         type="button"
                         className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
                         onClick={() => handleAcceptAnswer(answer.id)}
-                        disabled={acceptStatus === "loading"}
+                        disabled={acceptStatus === "loading" || isVoting || isFlagging}
                       >
                         {acceptStatus === "loading" ? "Accepting..." : "Accept answer"}
                       </button>
@@ -182,12 +279,43 @@ const QuestionDetail = () => {
                   </div>
                 </div>
                 <p className="mt-3 text-sm text-slate-600">{answer.body}</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                    onClick={() => handleVoteAnswer(answer.id, 1)}
+                    disabled={isVoting}
+                  >
+                    Upvote
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                    onClick={() => handleVoteAnswer(answer.id, -1)}
+                    disabled={isVoting}
+                  >
+                    Downvote
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-full border border-rose-200 px-3 py-1 text-xs font-medium text-rose-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                    onClick={() => handleFlagAnswer(answer.id)}
+                    disabled={isFlagging}
+                  >
+                    Flag
+                  </button>
+                </div>
               </div>
             ))
           )}
           {acceptError ? (
             <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
               {acceptError}
+            </p>
+          ) : null}
+          {voteError || flagError ? (
+            <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+              {voteError ?? flagError}
             </p>
           ) : null}
         </div>

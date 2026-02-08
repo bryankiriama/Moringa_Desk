@@ -6,7 +6,9 @@ import Pagination from "../components/ui/Pagination";
 import QuestionCard from "../components/ui/QuestionCard";
 import TagChip from "../components/ui/TagChip";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { createFlagItem, selectFlags } from "../features/flags/flagsSlice";
 import { fetchQuestions, selectQuestions } from "../features/questions/questionsSlice";
+import { castVoteItem, selectVotes } from "../features/votes/votesSlice";
 import type { QuestionCardData, TagChipData } from "../types";
 
 const filters: TagChipData[] = [
@@ -28,10 +30,69 @@ const tagFilters: TagChipData[] = [
 const QuestionsList = () => {
   const dispatch = useAppDispatch();
   const { items, status, error } = useAppSelector(selectQuestions);
+  const { status: voteStatus, error: voteError } = useAppSelector(selectVotes);
+  const { status: flagStatus, error: flagError } = useAppSelector(selectFlags);
+  const isVoting = voteStatus === "loading";
+  const isFlagging = flagStatus === "loading";
 
   useEffect(() => {
     dispatch(fetchQuestions(undefined));
   }, [dispatch]);
+
+  const handleVote = async (questionId: string, value: 1 | -1) => {
+    try {
+      await dispatch(
+        castVoteItem({ target_type: "question", target_id: questionId, value })
+      ).unwrap();
+      await dispatch(fetchQuestions(undefined));
+    } catch {
+      // errors handled in state
+    }
+  };
+
+  const handleFlag = async (questionId: string) => {
+    try {
+      await dispatch(
+        createFlagItem({
+          target_type: "question",
+          target_id: questionId,
+          reason: "Inappropriate content",
+        })
+      ).unwrap();
+      await dispatch(fetchQuestions(undefined));
+    } catch {
+      // errors handled in state
+    }
+  };
+
+  const renderActions = (questionId: string) => (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+        onClick={() => handleVote(questionId, 1)}
+        disabled={isVoting}
+      >
+        Upvote
+      </button>
+      <button
+        type="button"
+        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+        onClick={() => handleVote(questionId, -1)}
+        disabled={isVoting}
+      >
+        Downvote
+      </button>
+      <button
+        type="button"
+        className="rounded-full border border-rose-200 px-3 py-1 text-xs font-medium text-rose-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+        onClick={() => handleFlag(questionId)}
+        disabled={isFlagging}
+      >
+        Flag
+      </button>
+    </div>
+  );
 
   const questionCards: QuestionCardData[] = items.map((question) => ({
     question,
@@ -40,6 +101,7 @@ const QuestionsList = () => {
     stats: { answers: 0, views: 0, votes: question.vote_score },
     statusLabel: question.accepted_answer_id ? "Answered" : undefined,
     statusVariant: question.accepted_answer_id ? "success" : undefined,
+    action: renderActions(question.id),
   }));
 
   return (
@@ -92,6 +154,12 @@ const QuestionsList = () => {
           ))}
         </div>
       )}
+
+      {voteError || flagError ? (
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+          {voteError ?? flagError}
+        </p>
+      ) : null}
 
       <div className="flex items-center justify-center">
         <Pagination currentPage={1} totalPages={3} />
