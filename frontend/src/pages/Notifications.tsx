@@ -45,12 +45,17 @@ const toNotificationItem = (
   notification: Notification
 ): NotificationItemData => {
   const title = toTitleCase(notification.type);
+  const questionId =
+    typeof notification.payload?.question_id === "string"
+      ? notification.payload.question_id
+      : null;
   return {
     notification,
     title,
     message: formatMessage(notification),
     time: new Date(notification.created_at).toLocaleString(),
     isNew: !notification.is_read,
+    linkTo: questionId ? `/questions/${questionId}` : undefined,
   };
 };
 
@@ -127,7 +132,11 @@ const Notifications = () => {
         ) : (
           <div className="space-y-4">
             {notifications.map((item) => (
-              <NotificationItem key={item.notification.id} {...item} />
+              <NotificationItem
+                key={item.notification.id}
+                {...item}
+                to={item.linkTo}
+              />
             ))}
           </div>
         )}

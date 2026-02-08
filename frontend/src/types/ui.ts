@@ -61,4 +61,5 @@ export type NotificationItemData = {
   icon?: ReactNode;
   isNew?: boolean;
   badgeLabel?: string;
+  linkTo?: string;
 };

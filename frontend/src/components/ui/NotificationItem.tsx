@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
 
 import Badge from "./Badge";
 
@@ -10,6 +11,7 @@ type NotificationItemProps = {
   isNew?: boolean;
   badgeLabel?: string;
   className?: string;
+  to?: string;
 };
 
 const NotificationItem = ({
@@ -20,12 +22,13 @@ const NotificationItem = ({
   isNew = false,
   badgeLabel,
   className,
+  to,
 }: NotificationItemProps) => {
-  return (
+  const content = (
     <div
       className={`flex gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ${
         className ?? ""
-      }`}
+      } ${to ? "transition hover:border-slate-300" : ""}`}
     >
       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
         {icon ?? <span className="text-lg">✓</span>}
@@ -42,6 +45,16 @@ const NotificationItem = ({
         <p className="mt-2 text-xs text-slate-400">{time}</p>
       </div>
     </div>
+  );
+
+  if (!to) {
+    return content;
+  }
+
+  return (
+    <Link to={to} className="block rounded-2xl focus-ring">
+      {content}
+    </Link>
   );
 };
 
