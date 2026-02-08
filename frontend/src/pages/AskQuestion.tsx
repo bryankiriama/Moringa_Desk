@@ -1,5 +1,13 @@
+import { useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
+
 import SectionCard from "../components/ui/SectionCard";
 import TagChip from "../components/ui/TagChip";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import {
+  createQuestionItem,
+  selectQuestions,
+} from "../features/questions/questionsSlice";
 
 const popularTags = [
   "Python",
@@ -12,7 +20,30 @@ const popularTags = [
   "API",
 ];
 
+const categories = ["Frontend", "Backend", "Databases", "DevOps", "Career"];
+const phases = ["Foundation", "Intermediate", "Advanced", "Expert"];
+
 const AskQuestion = () => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { createStatus, createError } = useAppSelector(selectQuestions);
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [category, setCategory] = useState("");
+  const [stage, setStage] = useState("");
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    try {
+      const question = await dispatch(
+        createQuestionItem({ title, body, category, stage })
+      ).unwrap();
+      navigate(`/questions/${question.id}`);
+    } catch {
+      // errors handled in state
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -33,12 +64,14 @@ const AskQuestion = () => {
       </SectionCard>
 
       <SectionCard title="Ask a Question" subtitle="Help others understand your issue">
-        <div className="space-y-5">
+        <form className="space-y-5" onSubmit={handleSubmit}>
           <div>
             <label className="text-sm font-medium text-slate-700">Question Title</label>
             <input
               type="text"
               placeholder="e.g., How do I implement authentication in React?"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
               className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
             />
             <p className="mt-2 text-xs text-slate-500">
@@ -51,6 +84,8 @@ const AskQuestion = () => {
             <textarea
               rows={6}
               placeholder="Provide all the details someone would need to understand and answer your question."
+              value={body}
+              onChange={(event) => setBody(event.target.value)}
               className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
             />
             <p className="mt-2 text-xs text-slate-500">
@@ -61,14 +96,32 @@ const AskQuestion = () => {
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="text-sm font-medium text-slate-700">Category</label>
-              <select className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus-ring">
-                <option>Select a category</option>
+              <select
+                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus-ring"
+                value={category}
+                onChange={(event) => setCategory(event.target.value)}
+              >
+                <option value="">Select a category</option>
+                {categories.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
               <label className="text-sm font-medium text-slate-700">Learning Phase</label>
-              <select className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus-ring">
-                <option>Select learning phase</option>
+              <select
+                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus-ring"
+                value={stage}
+                onChange={(event) => setStage(event.target.value)}
+              >
+                <option value="">Select learning phase</option>
+                {phases.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -91,7 +144,7 @@ const AskQuestion = () => {
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <button type="button" className="text-sm font-medium text-slate-500 focus-ring rounded-md">
+            <button type="button" className="rounded-md text-sm font-medium text-slate-500 focus-ring">
               Save as Draft
             </button>
             <div className="flex items-center gap-2">
@@ -102,14 +155,21 @@ const AskQuestion = () => {
                 Preview
               </button>
               <button
-                type="button"
-                className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-medium text-white focus-ring"
+                type="submit"
+                className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-medium text-white focus-ring disabled:cursor-not-allowed disabled:opacity-70"
+                disabled={createStatus === "loading"}
               >
-                Post Question
+                {createStatus === "loading" ? "Posting..." : "Post Question"}
               </button>
             </div>
           </div>
-        </div>
+
+          {createError ? (
+            <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+              {createError}
+            </p>
+          ) : null}
+        </form>
       </SectionCard>
 
       <SectionCard title="Community Guidelines">

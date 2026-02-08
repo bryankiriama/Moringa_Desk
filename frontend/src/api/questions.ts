@@ -1,4 +1,5 @@
-import type { Question, Tag } from "../types";
+import { apiClient } from "./client";
+import type { Question, QuestionDetail, Tag } from "../types";
 
 export type QuestionCreateRequest = {
   title: string;
@@ -16,21 +17,26 @@ export type QuestionListParams = {
   q?: string;
 };
 
-// TODO: Implement API calls
-export const listQuestions = async (_params?: QuestionListParams): Promise<Question[]> => {
-  throw new Error("Not implemented");
+export const listQuestions = async (params?: QuestionListParams): Promise<Question[]> => {
+  const response = await apiClient.get<Question[]>("/questions", { params });
+  return response.data;
 };
 
-export const getQuestion = async (_questionId: string): Promise<Question> => {
-  throw new Error("Not implemented");
+export const getQuestionDetail = async (
+  questionId: string
+): Promise<QuestionDetail> => {
+  const response = await apiClient.get<QuestionDetail>(`/questions/${questionId}`);
+  return response.data;
 };
 
 export const createQuestion = async (
-  _payload: QuestionCreateRequest
+  payload: QuestionCreateRequest
 ): Promise<Question> => {
-  throw new Error("Not implemented");
+  const response = await apiClient.post<Question>("/questions", payload);
+  return response.data;
 };
 
+// TODO: Implement API calls
 export const listDuplicateQuestions = async (_title: string): Promise<Question[]> => {
   throw new Error("Not implemented");
 };

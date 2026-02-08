@@ -1,3 +1,4 @@
+import { apiClient } from "./client";
 import type { User } from "../types";
 
 export type LoginRequest = {
@@ -14,6 +15,7 @@ export type RegisterRequest = {
 export type TokenResponse = {
   access_token: string;
   token_type: "bearer";
+  role?: "student" | "admin";
 };
 
 export type ForgotPasswordRequest = {
@@ -25,15 +27,17 @@ export type ResetPasswordRequest = {
   new_password: string;
 };
 
+export const login = async (payload: LoginRequest): Promise<TokenResponse> => {
+  const response = await apiClient.post<TokenResponse>("/auth/login", payload);
+  return response.data;
+};
+
+export const register = async (payload: RegisterRequest): Promise<TokenResponse> => {
+  const response = await apiClient.post<TokenResponse>("/auth/register", payload);
+  return response.data;
+};
+
 // TODO: Implement API calls
-export const login = async (_payload: LoginRequest): Promise<TokenResponse> => {
-  throw new Error("Not implemented");
-};
-
-export const register = async (_payload: RegisterRequest): Promise<TokenResponse> => {
-  throw new Error("Not implemented");
-};
-
 export const forgotPassword = async (_payload: ForgotPasswordRequest): Promise<void> => {
   throw new Error("Not implemented");
 };

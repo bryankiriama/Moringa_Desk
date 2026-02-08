@@ -1,6 +1,31 @@
-import { Link } from "react-router-dom";
+import { useState, type FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
+
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { registerUser, selectAuth } from "../features/auth/authSlice";
 
 const Register = () => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { status, error } = useAppSelector(selectAuth);
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    try {
+      const result = await dispatch(
+        registerUser({ email, full_name: fullName, password })
+      ).unwrap();
+      const destination =
+        result.role === "admin" ? "/admin/dashboard" : "/dashboard";
+      navigate(destination, { replace: true });
+    } catch {
+      // Errors are handled in state
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -8,12 +33,14 @@ const Register = () => {
         <p className="text-sm text-slate-500">Join the MoringaDesk community today.</p>
       </div>
 
-      <form className="space-y-4">
+      <form className="space-y-4" onSubmit={handleSubmit}>
         <div>
           <label className="text-sm font-medium text-slate-700">Full name</label>
           <input
             type="text"
             placeholder="Your name"
+            value={fullName}
+            onChange={(event) => setFullName(event.target.value)}
             className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
           />
         </div>
@@ -22,6 +49,8 @@ const Register = () => {
           <input
             type="email"
             placeholder="you@example.com"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
             className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
           />
         </div>
@@ -30,16 +59,25 @@ const Register = () => {
           <input
             type="password"
             placeholder="Create a password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
             className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
           />
         </div>
         <button
-          type="button"
-          className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-medium text-white focus-ring"
+          type="submit"
+          className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-medium text-white focus-ring disabled:cursor-not-allowed disabled:opacity-70"
+          disabled={status === "loading"}
         >
-          Create Account
+          {status === "loading" ? "Creating account..." : "Create Account"}
         </button>
       </form>
+
+      {error ? (
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+          {error}
+        </p>
+      ) : null}
 
       <p className="text-center text-sm text-slate-500">
         Already have an account?{" "}
