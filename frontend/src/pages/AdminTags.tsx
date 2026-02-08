@@ -22,6 +22,10 @@ const AdminTags = () => {
   const { tags, tagsStatus, tagsError, createTagStatus, createTagError } =
     useAppSelector(selectAdmin);
   const [tagName, setTagName] = useState("");
+  const maxTagLength = 32;
+  const trimmedTagName = tagName.trim();
+  const isTagTooLong = trimmedTagName.length > maxTagLength;
+  const isTagInvalid = trimmedTagName.length === 0 || isTagTooLong;
 
   const isLoading = tagsStatus === "loading" || tagsStatus === "idle";
   const isCreating = createTagStatus === "loading";
@@ -31,11 +35,11 @@ const AdminTags = () => {
   }, [dispatch]);
 
   const handleCreateTag = async () => {
-    if (!tagName.trim()) {
+    if (isTagInvalid) {
       return;
     }
     try {
-      await dispatch(createTagItem({ name: tagName.trim() })).unwrap();
+      await dispatch(createTagItem({ name: trimmedTagName })).unwrap();
       setTagName("");
       await dispatch(fetchAdminTags());
     } catch {
@@ -76,6 +80,7 @@ const AdminTags = () => {
             placeholder="Enter tag name..."
             value={tagName}
             onChange={(event) => setTagName(event.target.value)}
+            maxLength={maxTagLength + 5}
             className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
             disabled={isCreating}
           />
@@ -83,11 +88,20 @@ const AdminTags = () => {
             type="button"
             className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-medium text-white focus-ring disabled:cursor-not-allowed disabled:opacity-60"
             onClick={handleCreateTag}
-            disabled={isCreating}
+            disabled={isCreating || isTagInvalid}
+            aria-disabled={isCreating || isTagInvalid}
           >
             {isCreating ? "Adding..." : "Add Tag"}
           </button>
         </div>
+        <p className="mt-2 text-xs text-slate-500">
+          Tag name can be up to {maxTagLength} characters.
+        </p>
+        {isTagTooLong ? (
+          <p className="mt-1 text-xs text-rose-600">
+            Tag name is too long. Please shorten it.
+          </p>
+        ) : null}
         {createTagError ? (
           <p className="mt-3 text-sm text-rose-600">{createTagError}</p>
         ) : null}
@@ -102,7 +116,7 @@ const AdminTags = () => {
           <EmptyState
             title="No tags created"
             description="Create tags to help organize questions."
-            actionLabel="Add tag"
+            actionLabel="Add Tag"
           />
         ) : (
           <div className="space-y-4">

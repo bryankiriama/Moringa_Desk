@@ -6,6 +6,8 @@ type SidebarItem = {
   label: string;
   to?: string;
   match?: string[];
+  disabledReason?: string;
+  section?: boolean;
 };
 
 type SidebarProps = {
@@ -28,10 +30,11 @@ const adminItems: SidebarItem[] = [
   { label: "Ask Question", to: "/questions/ask", match: ["/questions/ask"] },
   { label: "Trending", to: "/trending", match: ["/trending"] },
   { label: "Notifications", to: "/notifications", match: ["/notifications"] },
+  { label: "Admin", section: true },
   { label: "Users", to: "/admin/users", match: ["/admin/users"] },
   { label: "Manage Tags", to: "/admin/tags", match: ["/admin/tags"] },
   { label: "FAQs", to: "/admin/faqs", match: ["/admin/faqs"] },
-  { label: "Settings" },
+  { label: "Settings", disabledReason: "Coming soon" },
 ];
 
 const Sidebar = ({ variant, isOpen, onClose }: SidebarProps) => {
@@ -122,9 +125,25 @@ type SidebarNavItemProps = {
 };
 
 const SidebarNavItem = ({ item, isActive }: SidebarNavItemProps) => {
-  if (!item.to) {
+  if (item.section) {
     return (
-      <div className="flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2 text-sm text-slate-400">
+      <div className="px-3 pt-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
+        {item.label}
+      </div>
+    );
+  }
+
+  if (!item.to) {
+    const accessibleLabel = item.disabledReason
+      ? `${item.label} (${item.disabledReason})`
+      : item.label;
+    return (
+      <div
+        className="flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2 text-sm text-slate-400"
+        aria-disabled="true"
+        aria-label={accessibleLabel}
+        title={item.disabledReason ?? "Coming soon"}
+      >
         <span className="h-5 w-5 rounded-md bg-slate-200" aria-hidden="true" />
         <span>{item.label}</span>
       </div>

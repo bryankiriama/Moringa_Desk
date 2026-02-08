@@ -112,7 +112,7 @@ const Notifications = () => {
           className="ml-auto rounded-md text-sm text-slate-500 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
           disabled={markStatus === "loading"}
         >
-          {markStatus === "loading" ? "Marking..." : "Mark all as read"}
+          {markStatus === "loading" ? "Marking..." : "Mark All as Read"}
         </button>
       </div>
 

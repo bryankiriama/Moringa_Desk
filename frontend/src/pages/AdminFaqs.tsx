@@ -24,6 +24,18 @@ const AdminFaqs = () => {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
 
+  const maxQuestionLength = 200;
+  const maxAnswerLength = 500;
+  const trimmedQuestion = question.trim();
+  const trimmedAnswer = answer.trim();
+  const isQuestionTooLong = trimmedQuestion.length > maxQuestionLength;
+  const isAnswerTooLong = trimmedAnswer.length > maxAnswerLength;
+  const isFaqInvalid =
+    trimmedQuestion.length === 0 ||
+    trimmedAnswer.length === 0 ||
+    isQuestionTooLong ||
+    isAnswerTooLong;
+
   const isLoading = faqsStatus === "loading" || faqsStatus === "idle";
   const isCreating = createFaqStatus === "loading";
 
@@ -33,12 +45,12 @@ const AdminFaqs = () => {
 
   const handleCreateFaq = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!question.trim() || !answer.trim()) {
+    if (isFaqInvalid) {
       return;
     }
     try {
       await dispatch(
-        createFaqItem({ question: question.trim(), answer: answer.trim() })
+        createFaqItem({ question: trimmedQuestion, answer: trimmedAnswer })
       ).unwrap();
       setQuestion("");
       setAnswer("");
@@ -84,7 +96,8 @@ const AdminFaqs = () => {
             type="submit"
             form="faq-create-form"
             className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white focus-ring disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={isCreating}
+            disabled={isCreating || isFaqInvalid}
+            aria-disabled={isCreating || isFaqInvalid}
           >
             {isCreating ? "Adding..." : "Add FAQ"}
           </button>
@@ -98,9 +111,18 @@ const AdminFaqs = () => {
               placeholder="Enter FAQ question"
               value={question}
               onChange={(event) => setQuestion(event.target.value)}
+              maxLength={maxQuestionLength + 20}
               className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
               disabled={isCreating}
             />
+            <p className="mt-2 text-xs text-slate-500">
+              Question can be up to {maxQuestionLength} characters.
+            </p>
+            {isQuestionTooLong ? (
+              <p className="mt-1 text-xs text-rose-600">
+                Question is too long. Please shorten it.
+              </p>
+            ) : null}
           </div>
           <div>
             <label className="text-sm font-medium text-slate-700">Answer</label>
@@ -109,9 +131,18 @@ const AdminFaqs = () => {
               placeholder="Provide the answer"
               value={answer}
               onChange={(event) => setAnswer(event.target.value)}
+              maxLength={maxAnswerLength + 50}
               className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
               disabled={isCreating}
             />
+            <p className="mt-2 text-xs text-slate-500">
+              Answer can be up to {maxAnswerLength} characters.
+            </p>
+            {isAnswerTooLong ? (
+              <p className="mt-1 text-xs text-rose-600">
+                Answer is too long. Please shorten it.
+              </p>
+            ) : null}
           </div>
           {createFaqError ? (
             <p className="text-sm text-rose-600">{createFaqError}</p>
