@@ -97,6 +97,9 @@ const followsSlice = createSlice({
     clearFollowError(state) {
       state.error = null;
     },
+    clearFollowListError(state) {
+      state.listError = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -154,6 +157,7 @@ const followsSlice = createSlice({
   },
 });
 
-export const { clearFollowError, setFollowing } = followsSlice.actions;
+export const { clearFollowError, clearFollowListError, setFollowing } =
+  followsSlice.actions;
 export const selectFollows = (state: RootState) => state.follows;
 export default followsSlice.reducer;

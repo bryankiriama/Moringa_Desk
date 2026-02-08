@@ -8,6 +8,7 @@ import QuestionCard from "../components/ui/QuestionCard";
 import SectionCard from "../components/ui/SectionCard";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import {
+  clearFollowListError,
   fetchFollowedQuestions,
   selectFollows,
 } from "../features/follows/followsSlice";
@@ -145,6 +146,8 @@ const Dashboard = () => {
   const { items: followedQuestions, listStatus, listError, status: followStatus } =
     useAppSelector(selectFollows);
   const isUnfollowing = followStatus === "loading";
+  const isLoadingList = listStatus === "loading" || listStatus === "idle";
+  const hasFollowed = followedQuestions.length > 0;
 
   useEffect(() => {
     dispatch(fetchFollowedQuestions());
@@ -152,6 +155,7 @@ const Dashboard = () => {
 
   const handleUnfollow = async (questionId: string) => {
     try {
+      dispatch(clearFollowListError());
       await dispatch(unfollowQuestionItem(questionId)).unwrap();
       await dispatch(fetchFollowedQuestions());
     } catch {
@@ -330,20 +334,12 @@ const Dashboard = () => {
         title="Following"
         subtitle="Questions you are tracking"
       >
-        {listStatus === "loading" || listStatus === "idle" ? (
+        {isLoadingList ? (
           <EmptyState
             title="Loading followed questions..."
             description="Fetching your followed list."
           />
-        ) : listError ? (
-          <EmptyState title="Unable to load followed questions" description={listError} />
-        ) : followedQuestions.length === 0 ? (
-          <EmptyState
-            title="No followed questions"
-            description="Follow a question to track updates."
-            actionLabel="Browse Questions"
-          />
-        ) : (
+        ) : hasFollowed ? (
           <div className="space-y-4">
             {followedQuestions.map((question) => (
               <QuestionCard
@@ -366,7 +362,16 @@ const Dashboard = () => {
               />
             ))}
           </div>
+        ) : (
+          <EmptyState
+            title="No followed questions"
+            description="Follow a question to track updates."
+            actionLabel="Browse Questions"
+          />
         )}
+        {listError ? (
+          <p className="mt-3 text-sm text-rose-600">{listError}</p>
+        ) : null}
       </SectionCard>
 
       <SectionCard
