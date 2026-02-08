@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, type Location } from "react-router-dom";
 
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { registerUser, selectAuth } from "../features/auth/authSlice";
@@ -7,10 +7,13 @@ import { registerUser, selectAuth } from "../features/auth/authSlice";
 const Register = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { status, error } = useAppSelector(selectAuth);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const from = (location.state as { from?: Location })?.from;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -18,8 +21,11 @@ const Register = () => {
       const result = await dispatch(
         registerUser({ email, full_name: fullName, password })
       ).unwrap();
-      const destination =
+      const fallbackDestination =
         result.role === "admin" ? "/admin/dashboard" : "/dashboard";
+      const destination = from
+        ? `${from.pathname}${from.search}${from.hash}`
+        : fallbackDestination;
       navigate(destination, { replace: true });
     } catch {
       // Errors are handled in state
