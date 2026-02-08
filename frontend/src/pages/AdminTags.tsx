@@ -1,8 +1,15 @@
+import { useEffect, useState } from "react";
+
 import Badge from "../components/ui/Badge";
 import EmptyState from "../components/ui/EmptyState";
 import SectionCard from "../components/ui/SectionCard";
 import TagChip from "../components/ui/TagChip";
-import type { Tag } from "../types";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import {
+  createTagItem,
+  fetchAdminTags,
+  selectAdmin,
+} from "../features/admin/adminSlice";
 
 const tabs = [
   { label: "Manage Tags", active: true },
@@ -10,42 +17,32 @@ const tabs = [
   { label: "User Management", active: false },
 ];
 
-type TagRow = Tag & { usage_count: number };
-
-const tags: TagRow[] = [
-  {
-    id: "t-python",
-    name: "Python",
-    created_at: "2024-01-01T00:00:00Z",
-    usage_count: 234,
-  },
-  {
-    id: "t-js",
-    name: "JavaScript",
-    created_at: "2024-01-01T00:00:00Z",
-    usage_count: 198,
-  },
-  {
-    id: "t-react",
-    name: "React",
-    created_at: "2024-01-01T00:00:00Z",
-    usage_count: 165,
-  },
-  {
-    id: "t-db",
-    name: "Databases",
-    created_at: "2024-01-01T00:00:00Z",
-    usage_count: 143,
-  },
-  {
-    id: "t-devops",
-    name: "DevOps",
-    created_at: "2024-01-01T00:00:00Z",
-    usage_count: 98,
-  },
-];
-
 const AdminTags = () => {
+  const dispatch = useAppDispatch();
+  const { tags, tagsStatus, tagsError, createTagStatus, createTagError } =
+    useAppSelector(selectAdmin);
+  const [tagName, setTagName] = useState("");
+
+  const isLoading = tagsStatus === "loading" || tagsStatus === "idle";
+  const isCreating = createTagStatus === "loading";
+
+  useEffect(() => {
+    dispatch(fetchAdminTags());
+  }, [dispatch]);
+
+  const handleCreateTag = async () => {
+    if (!tagName.trim()) {
+      return;
+    }
+    try {
+      await dispatch(createTagItem({ name: tagName.trim() })).unwrap();
+      setTagName("");
+      await dispatch(fetchAdminTags());
+    } catch {
+      // errors handled in state
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -77,19 +74,31 @@ const AdminTags = () => {
           <input
             type="text"
             placeholder="Enter tag name..."
+            value={tagName}
+            onChange={(event) => setTagName(event.target.value)}
             className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
+            disabled={isCreating}
           />
           <button
             type="button"
-            className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-medium text-white focus-ring"
+            className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-medium text-white focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={handleCreateTag}
+            disabled={isCreating}
           >
-            Add Tag
+            {isCreating ? "Adding..." : "Add Tag"}
           </button>
         </div>
+        {createTagError ? (
+          <p className="mt-3 text-sm text-rose-600">{createTagError}</p>
+        ) : null}
       </SectionCard>
 
-      <SectionCard title="All Tags" subtitle="5 tags total">
-        {tags.length === 0 ? (
+      <SectionCard title="All Tags" subtitle={`${tags.length} tags total`}>
+        {isLoading ? (
+          <EmptyState title="Loading tags..." description="Fetching tag list." />
+        ) : tagsError ? (
+          <EmptyState title="Unable to load tags" description={tagsError} />
+        ) : tags.length === 0 ? (
           <EmptyState
             title="No tags created"
             description="Create tags to help organize questions."
@@ -105,14 +114,22 @@ const AdminTags = () => {
                 <div className="flex items-center gap-3">
                   <TagChip label={tag.name} />
                   <span className="text-sm text-slate-500">
-                    Used in {tag.usage_count} questions
+                    Used in N/A questions
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-slate-400">
-                  <button type="button" className="rounded-md text-slate-500 focus-ring">
+                  <button
+                    type="button"
+                    className="rounded-md text-slate-500 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled
+                  >
                     Edit
                   </button>
-                  <button type="button" className="rounded-md text-rose-500 focus-ring">
+                  <button
+                    type="button"
+                    className="rounded-md text-rose-500 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled
+                  >
                     Delete
                   </button>
                 </div>
