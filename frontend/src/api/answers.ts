@@ -1,3 +1,4 @@
+import { apiClient } from "./client";
 import type { Answer } from "../types";
 
 export type AnswerCreateRequest = {
@@ -5,20 +6,27 @@ export type AnswerCreateRequest = {
 };
 
 // TODO: Implement API calls
-export const listAnswers = async (_questionId: string): Promise<Answer[]> => {
-  throw new Error("Not implemented");
+export const listAnswers = async (questionId: string): Promise<Answer[]> => {
+  const response = await apiClient.get<Answer[]>(
+    `/questions/${questionId}/answers`
+  );
+  return response.data;
 };
 
 export const createAnswer = async (
-  _questionId: string,
-  _payload: AnswerCreateRequest
+  questionId: string,
+  payload: AnswerCreateRequest
 ): Promise<Answer> => {
-  throw new Error("Not implemented");
+  const response = await apiClient.post<Answer>(
+    `/questions/${questionId}/answers`,
+    payload
+  );
+  return response.data;
 };
 
 export const acceptAnswer = async (
-  _questionId: string,
-  _answerId: string
+  questionId: string,
+  answerId: string
 ): Promise<void> => {
-  throw new Error("Not implemented");
+  await apiClient.post(`/questions/${questionId}/answers/${answerId}/accept`);
 };

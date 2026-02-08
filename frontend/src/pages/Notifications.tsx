@@ -1,93 +1,93 @@
+import { useEffect } from "react";
+
 import Badge from "../components/ui/Badge";
 import EmptyState from "../components/ui/EmptyState";
 import NotificationItem from "../components/ui/NotificationItem";
 import SectionCard from "../components/ui/SectionCard";
 import TagChip from "../components/ui/TagChip";
-import type { NotificationItemData, TagChipData } from "../types";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import {
+  fetchNotifications,
+  markAllNotificationsRead,
+  selectNotifications,
+} from "../features/notifications/notificationsSlice";
+import type { Notification, NotificationItemData, TagChipData } from "../types";
 
-const tabs: TagChipData[] = [
-  { label: "All Notifications", active: true },
-  { label: "Unread (3)" },
-];
+const toTitleCase = (value: string) =>
+  value
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 
-const notifications: NotificationItemData[] = [
-  {
-    notification: {
-      id: "n-100",
-      user_id: "u-700",
-      type: "accepted_answer",
-      payload: { answer_id: "a-600", question_id: "q-400" },
-      is_read: false,
-      created_at: "2024-01-30T09:00:00Z",
-    },
-    title: "Your answer was accepted",
-    message: "Sarah Chen accepted your answer on \"How to implement OAuth2 in Django?\"",
-    time: "5 minutes ago",
-    isNew: true,
-  },
-  {
-    notification: {
-      id: "n-101",
-      user_id: "u-700",
-      type: "vote_received",
-      payload: { target_type: "answer", value: 1 },
-      is_read: false,
-      created_at: "2024-01-30T08:00:00Z",
-    },
-    title: "Your answer received upvotes",
-    message: "Your answer on \"React useState best practices\" received 5 new upvotes",
-    time: "1 hour ago",
-    isNew: true,
-  },
-  {
-    notification: {
-      id: "n-102",
-      user_id: "u-700",
-      type: "answer_posted",
-      payload: { question_id: "q-410", answer_id: "a-612" },
-      is_read: false,
-      created_at: "2024-01-30T07:00:00Z",
-    },
-    title: "New answer on your question",
-    message: "Michael Johnson answered your question \"Understanding async/await patterns\"",
-    time: "2 hours ago",
-    isNew: true,
-  },
-  {
-    notification: {
-      id: "n-103",
-      user_id: "u-700",
-      type: "new_follower",
-      payload: { follower_id: "u-702" },
-      is_read: true,
-      created_at: "2024-01-30T06:00:00Z",
-    },
-    title: "New follower",
-    message: "Aisha Patel started following your activity",
-    time: "3 hours ago",
-  },
-  {
-    notification: {
-      id: "n-104",
-      user_id: "u-700",
-      type: "achievement_unlocked",
-      payload: { badge: "Helpful Answer" },
-      is_read: true,
-      created_at: "2024-01-29T09:00:00Z",
-    },
-    title: "Achievement unlocked",
-    message: "You earned the \"Helpful Answer\" badge for having 10 accepted answers",
-    time: "1 day ago",
-  },
-];
+const formatMessage = (notification: Notification) => {
+  const payload = notification.payload ?? {};
+  const questionId =
+    typeof payload.question_id === "string" ? payload.question_id : null;
+  const answerId =
+    typeof payload.answer_id === "string" ? payload.answer_id : null;
+  const badge = typeof payload.badge === "string" ? payload.badge : null;
+
+  if (badge) {
+    return `You earned the ${badge} badge.`;
+  }
+  if (questionId && answerId) {
+    return `Activity on question ${questionId} (answer ${answerId}).`;
+  }
+  if (questionId) {
+    return `New activity on question ${questionId}.`;
+  }
+  if (answerId) {
+    return `Update on answer ${answerId}.`;
+  }
+  return "You have new activity on MoringaDesk.";
+};
+
+const toNotificationItem = (
+  notification: Notification
+): NotificationItemData => {
+  const title = toTitleCase(notification.type);
+  return {
+    notification,
+    title,
+    message: formatMessage(notification),
+    time: new Date(notification.created_at).toLocaleString(),
+    isNew: !notification.is_read,
+  };
+};
 
 const Notifications = () => {
+  const dispatch = useAppDispatch();
+  const { items, status, error, markStatus, markError } =
+    useAppSelector(selectNotifications);
+
+  useEffect(() => {
+    dispatch(fetchNotifications(undefined));
+  }, [dispatch]);
+
+  const unreadCount = items.filter((notification) => !notification.is_read).length;
+
+  const tabs: TagChipData[] = [
+    { label: "All Notifications", active: true },
+    { label: `Unread (${unreadCount})` },
+  ];
+
+  const notifications: NotificationItemData[] = items.map(toNotificationItem);
+
+  const handleMarkAllRead = async () => {
+    try {
+      await dispatch(markAllNotificationsRead()).unwrap();
+    } catch {
+      // errors handled in state
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Notifications</h1>
-          <p className="text-sm text-slate-500">You have 3 unread notifications</p>
+          <p className="text-sm text-slate-500">
+            You have {unreadCount} unread notifications
+          </p>
         </div>
         <button
           type="button"
@@ -101,13 +101,25 @@ const Notifications = () => {
         {tabs.map((tab) => (
           <TagChip key={tab.label} label={tab.label} active={tab.active} />
         ))}
-        <button type="button" className="ml-auto rounded-md text-sm text-slate-500 focus-ring">
-          Mark all as read
+        <button
+          type="button"
+          onClick={handleMarkAllRead}
+          className="ml-auto rounded-md text-sm text-slate-500 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={markStatus === "loading"}
+        >
+          {markStatus === "loading" ? "Marking..." : "Mark all as read"}
         </button>
       </div>
 
       <SectionCard>
-        {notifications.length === 0 ? (
+        {status === "loading" || status === "idle" ? (
+          <EmptyState
+            title="Loading notifications..."
+            description="Fetching your latest updates."
+          />
+        ) : error ? (
+          <EmptyState title="Unable to load notifications" description={error} />
+        ) : notifications.length === 0 ? (
           <EmptyState
             title="You're all caught up"
             description="We'll let you know when new activity happens."
@@ -120,6 +132,12 @@ const Notifications = () => {
           </div>
         )}
       </SectionCard>
+
+      {markError ? (
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+          {markError}
+        </p>
+      ) : null}
 
       <div className="flex items-center justify-end">
         <Badge label="Switch to Student View" variant="outline" />
