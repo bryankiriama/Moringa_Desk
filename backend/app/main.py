@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api.admin_users import router as admin_users_router
 from backend.app.api.answers import router as answers_router
@@ -15,6 +16,17 @@ from backend.app.api.tags import router as tags_router
 from backend.app.api.votes import router as votes_router
 
 app = FastAPI(title="Moringa Desk API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(health_router)
 app.include_router(auth_router)
