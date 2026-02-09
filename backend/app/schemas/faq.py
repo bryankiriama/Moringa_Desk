@@ -9,6 +9,7 @@ class FAQCreate(BaseModel):
     answer: str = Field(min_length=20)
 
 
+
 class FAQOut(BaseModel):
     id: uuid.UUID
     question: str
