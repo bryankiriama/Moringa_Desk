@@ -18,6 +18,7 @@ class MyQuestionOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+
 class MyAnswerOut(BaseModel):
     id: uuid.UUID
     question_id: uuid.UUID
