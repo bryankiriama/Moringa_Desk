@@ -8,9 +8,11 @@ import QuestionCard from "../components/ui/QuestionCard";
 import SectionCard from "../components/ui/SectionCard";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import {
+  clearFollowListError,
   fetchFollowedQuestions,
   selectFollows,
 } from "../features/follows/followsSlice";
+import { unfollowQuestionItem } from "../features/follows/followsSlice";
 import type { MetricCardData, QuestionCardData } from "../types";
 
 const metrics: MetricCardData[] = [
@@ -141,12 +143,30 @@ const unansweredQuestions: QuestionCardData[] = [
 
 const Dashboard = () => {
   const dispatch = useAppDispatch();
-  const { items: followedQuestions, listStatus, listError } =
+  const { items: followedQuestions, listStatus, listError, status: followStatus } =
     useAppSelector(selectFollows);
+  const isUnfollowing = followStatus === "loading";
+  const isLoadingList = listStatus === "loading" || listStatus === "idle";
+  const hasFollowed = followedQuestions.length > 0;
 
   useEffect(() => {
     dispatch(fetchFollowedQuestions());
   }, [dispatch]);
+
+  const handleUnfollow = async (questionId: string) => {
+    try {
+      dispatch(clearFollowListError());
+      await dispatch(unfollowQuestionItem(questionId)).unwrap();
+      await dispatch(fetchFollowedQuestions());
+    } catch {
+      // errors handled in state
+    }
+  };
+
+  const handleRetryFollowList = () => {
+    dispatch(clearFollowListError());
+    dispatch(fetchFollowedQuestions());
+  };
 
   return (
     <div className="space-y-8">
@@ -319,20 +339,12 @@ const Dashboard = () => {
         title="Following"
         subtitle="Questions you are tracking"
       >
-        {listStatus === "loading" || listStatus === "idle" ? (
+        {isLoadingList ? (
           <EmptyState
             title="Loading followed questions..."
             description="Fetching your followed list."
           />
-        ) : listError ? (
-          <EmptyState title="Unable to load followed questions" description={listError} />
-        ) : followedQuestions.length === 0 ? (
-          <EmptyState
-            title="No followed questions"
-            description="Follow a question to track updates."
-            actionLabel="Browse Questions"
-          />
-        ) : (
+        ) : hasFollowed ? (
           <div className="space-y-4">
             {followedQuestions.map((question) => (
               <QuestionCard
@@ -342,10 +354,39 @@ const Dashboard = () => {
                 meta={{ author: "Community", time: "Recently" }}
                 stats={{ answers: 0, views: 0, votes: question.vote_score }}
                 to={`/questions/${question.id}`}
+                action={
+                  <button
+                    type="button"
+                    className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                    onClick={() => handleUnfollow(question.id)}
+                    disabled={isUnfollowing}
+                  >
+                    {isUnfollowing ? "Updating..." : "Unfollow"}
+                  </button>
+                }
               />
             ))}
           </div>
+        ) : (
+          <EmptyState
+            title="No followed questions"
+            description="Follow a question to track updates."
+            actionLabel="Browse Questions"
+          />
         )}
+        {listError ? (
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+            <p className="text-rose-600">{listError}</p>
+            <button
+              type="button"
+              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={handleRetryFollowList}
+              disabled={isLoadingList}
+            >
+              {isLoadingList ? "Retrying..." : "Retry"}
+            </button>
+          </div>
+        ) : null}
       </SectionCard>
 
       <SectionCard

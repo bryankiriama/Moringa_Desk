@@ -15,6 +15,7 @@ import {
 } from "../features/answers/answersSlice";
 import { createFlagItem, selectFlags } from "../features/flags/flagsSlice";
 import {
+  clearFollowError,
   fetchFollowStatus,
   followQuestionItem,
   selectFollows,
@@ -190,6 +191,7 @@ const QuestionDetail = () => {
     if (!questionId) {
       return;
     }
+    dispatch(clearFollowError());
     try {
       if (isFollowing) {
         await dispatch(unfollowQuestionItem(questionId)).unwrap();
@@ -274,6 +276,10 @@ const QuestionDetail = () => {
 
           {followError ? (
             <p className="text-sm text-rose-600">{followError}</p>
+          ) : followStatus === "succeeded" ? (
+            <p className="text-sm text-emerald-600">
+              {isFollowing ? "You are following this question." : "Unfollowed."}
+            </p>
           ) : null}
 
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">

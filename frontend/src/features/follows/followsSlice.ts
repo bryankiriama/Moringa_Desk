@@ -94,6 +94,12 @@ const followsSlice = createSlice({
     setFollowing(state, action: { payload: boolean }) {
       state.isFollowing = action.payload;
     },
+    clearFollowError(state) {
+      state.error = null;
+    },
+    clearFollowListError(state) {
+      state.listError = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -151,6 +157,7 @@ const followsSlice = createSlice({
   },
 });
 
-export const { setFollowing } = followsSlice.actions;
+export const { clearFollowError, clearFollowListError, setFollowing } =
+  followsSlice.actions;
 export const selectFollows = (state: RootState) => state.follows;
 export default followsSlice.reducer;
