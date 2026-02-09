@@ -1,6 +1,9 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 
+import { useAppSelector } from "../../app/hooks";
+import { selectAuth } from "../../features/auth/authSlice";
+
 type TopbarProps = {
   onMenuClick?: () => void;
   placeholder?: string;
@@ -8,10 +11,20 @@ type TopbarProps = {
 };
 
 const Topbar = ({ onMenuClick, placeholder, title }: TopbarProps) => {
+  const { displayName, role } = useAppSelector(selectAuth);
   const searchPlaceholder = useMemo(
     () => placeholder ?? "Search questions, tags, users...",
     [placeholder]
   );
+  const resolvedName =
+    displayName ?? (role === "admin" ? "Admin User" : "Student User");
+  const initials = resolvedName
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -66,9 +79,9 @@ const Topbar = ({ onMenuClick, placeholder, title }: TopbarProps) => {
           </button>
           <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600 sm:flex">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
-              AU
+              {initials || "U"}
             </span>
-            <span>Admin User</span>
+            <span>{resolvedName}</span>
           </div>
         </div>
       </div>

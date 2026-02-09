@@ -1,5 +1,8 @@
 import { NavLink, matchPath, useLocation } from "react-router-dom";
 
+import { useAppSelector } from "../../app/hooks";
+import { selectAuth } from "../../features/auth/authSlice";
+
 type SidebarVariant = "student" | "admin";
 
 type SidebarItem = {
@@ -40,6 +43,16 @@ const adminItems: SidebarItem[] = [
 const Sidebar = ({ variant, isOpen, onClose }: SidebarProps) => {
   const items = variant === "admin" ? adminItems : studentItems;
   const location = useLocation();
+  const { displayName, role } = useAppSelector(selectAuth);
+  const resolvedName =
+    displayName ?? (role === "admin" ? "Admin User" : "Student User");
+  const initials = resolvedName
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
   const questionDetailMatch = matchPath(
     { path: "/questions/:questionId", end: true },
     location.pathname
@@ -92,12 +105,10 @@ const Sidebar = ({ variant, isOpen, onClose }: SidebarProps) => {
           <div className="border-t border-slate-200 px-4 py-4">
             <div className="flex items-center gap-3 rounded-2xl bg-slate-50 px-3 py-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-600">
-                {variant === "admin" ? "AD" : "ST"}
+                {initials || (variant === "admin" ? "AD" : "ST")}
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-900">
-                  {variant === "admin" ? "Admin User" : "Student User"}
-                </p>
+                <p className="text-sm font-semibold text-slate-900">{resolvedName}</p>
                 <p className="text-xs text-slate-500">
                   {variant === "admin" ? "Admin" : "Student"}
                 </p>

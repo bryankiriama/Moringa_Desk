@@ -3,7 +3,7 @@ import axios from "axios";
 
 import type { RootState } from "../../app/store";
 import { login, register } from "../../api/auth";
-import { AUTH_ROLE_KEY, AUTH_TOKEN_KEY } from "../../api/client";
+import { AUTH_NAME_KEY, AUTH_ROLE_KEY, AUTH_TOKEN_KEY } from "../../api/client";
 import type { UserRole } from "../../types";
 
 type AuthStatus = "idle" | "loading" | "succeeded" | "failed";
@@ -11,16 +11,19 @@ type AuthStatus = "idle" | "loading" | "succeeded" | "failed";
 type AuthState = {
   token: string | null;
   role: UserRole;
+  displayName: string | null;
   status: AuthStatus;
   error: string | null;
 };
 
 const storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
 const storedRole = localStorage.getItem(AUTH_ROLE_KEY) as UserRole | null;
+const storedName = localStorage.getItem(AUTH_NAME_KEY);
 
 const initialState: AuthState = {
   token: storedToken,
   role: storedRole ?? "student",
+  displayName: storedName,
   status: "idle",
   error: null,
 };
@@ -44,9 +47,11 @@ export const loginUser = createAsyncThunk(
     try {
       const response = await login(payload);
       const role = response.role ?? "student";
+      const nameFromEmail = payload.email.split("@")[0] || "User";
       localStorage.setItem(AUTH_TOKEN_KEY, response.access_token);
       localStorage.setItem(AUTH_ROLE_KEY, role);
-      return { token: response.access_token, role };
+      localStorage.setItem(AUTH_NAME_KEY, nameFromEmail);
+      return { token: response.access_token, role, displayName: nameFromEmail };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error));
     }
@@ -61,7 +66,8 @@ export const registerUser = createAsyncThunk(
       const role = response.role ?? "student";
       localStorage.setItem(AUTH_TOKEN_KEY, response.access_token);
       localStorage.setItem(AUTH_ROLE_KEY, role);
-      return { token: response.access_token, role };
+      localStorage.setItem(AUTH_NAME_KEY, payload.full_name);
+      return { token: response.access_token, role, displayName: payload.full_name };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error));
     }
@@ -75,10 +81,12 @@ const authSlice = createSlice({
     logout(state) {
       state.token = null;
       state.role = "student";
+      state.displayName = null;
       state.status = "idle";
       state.error = null;
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(AUTH_ROLE_KEY);
+      localStorage.removeItem(AUTH_NAME_KEY);
     },
   },
   extraReducers: (builder) => {
@@ -91,6 +99,7 @@ const authSlice = createSlice({
         state.status = "succeeded";
         state.token = action.payload.token;
         state.role = action.payload.role;
+        state.displayName = action.payload.displayName;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.status = "failed";
@@ -104,6 +113,7 @@ const authSlice = createSlice({
         state.status = "succeeded";
         state.token = action.payload.token;
         state.role = action.payload.role;
+        state.displayName = action.payload.displayName;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.status = "failed";
