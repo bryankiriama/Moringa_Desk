@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import { useAppSelector } from "../../app/hooks";
 import { selectAuth } from "../../features/auth/authSlice";
+import { selectNotifications } from "../../features/notifications/notificationsSlice";
 
 type TopbarProps = {
   onMenuClick?: () => void;
@@ -12,6 +13,7 @@ type TopbarProps = {
 
 const Topbar = ({ onMenuClick, placeholder, title }: TopbarProps) => {
   const { displayName, role } = useAppSelector(selectAuth);
+  const { items: notifications } = useAppSelector(selectNotifications);
   const searchPlaceholder = useMemo(
     () => placeholder ?? "Search questions, tags, users...",
     [placeholder]
@@ -25,6 +27,8 @@ const Topbar = ({ onMenuClick, placeholder, title }: TopbarProps) => {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+  const unreadCount = notifications.filter((notification) => !notification.is_read)
+    .length;
 
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -64,9 +68,11 @@ const Topbar = ({ onMenuClick, placeholder, title }: TopbarProps) => {
             aria-label="Notifications"
           >
             <BellIcon />
-            <span className="absolute -right-1 -top-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[11px] font-semibold text-white">
-              3
-            </span>
+            {unreadCount > 0 ? (
+              <span className="absolute -right-1 -top-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[11px] font-semibold text-white">
+                {unreadCount}
+              </span>
+            ) : null}
           </Link>
           <button
             type="button"

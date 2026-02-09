@@ -166,9 +166,6 @@ const QuestionsList = () => {
         <Pagination currentPage={1} totalPages={3} />
       </div>
 
-      <div className="flex items-center justify-end">
-        <Badge label="Switch to Student View" variant="outline" />
-      </div>
     </div>
   );
 };

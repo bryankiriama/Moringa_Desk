@@ -31,6 +31,16 @@ const Login = () => {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-sm font-semibold text-white">
+          M
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-slate-900">MoringaDesk</p>
+          <p className="text-xs text-slate-500">Knowledge Platform</p>
+        </div>
+      </div>
+
       <div>
         <h1 className="text-2xl font-semibold text-slate-900">Welcome back</h1>
         <p className="text-sm text-slate-500">Sign in to continue to MoringaDesk.</p>
@@ -44,7 +54,7 @@ const Login = () => {
             placeholder="you@example.com"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
+            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus-ring"
           />
         </div>
         <div>
@@ -54,12 +64,12 @@ const Login = () => {
             placeholder="Enter your password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
+            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus-ring"
           />
         </div>
         <button
           type="submit"
-          className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-medium text-white focus-ring disabled:cursor-not-allowed disabled:opacity-70"
+          className="w-full rounded-full bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-200/80 focus-ring disabled:cursor-not-allowed disabled:opacity-70"
           disabled={status === "loading"}
         >
           {status === "loading" ? "Signing in..." : "Sign In"}
@@ -74,7 +84,7 @@ const Login = () => {
 
       <p className="text-center text-sm text-slate-500">
         Don&apos;t have an account?{" "}
-        <Link to="/register" className="rounded-md font-medium text-indigo-600 focus-ring">
+        <Link to="/register" className="rounded-md font-medium text-slate-900 focus-ring">
           Create one
         </Link>
       </p>

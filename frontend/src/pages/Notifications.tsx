@@ -148,9 +148,6 @@ const Notifications = () => {
         </p>
       ) : null}
 
-      <div className="flex items-center justify-end">
-        <Badge label="Switch to Student View" variant="outline" />
-      </div>
     </div>
   );
 };

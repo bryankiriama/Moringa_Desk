@@ -279,12 +279,6 @@ const AdminDashboard = () => {
         </div>
       </SectionCard>
 
-      <button
-        type="button"
-        className="fixed bottom-6 right-6 rounded-full border border-indigo-200 bg-white px-4 py-2 text-sm font-medium text-indigo-600 shadow-sm focus-ring"
-      >
-        Switch to Student View
-      </button>
     </div>
   );
 };
