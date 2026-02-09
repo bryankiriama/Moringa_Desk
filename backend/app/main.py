@@ -41,3 +41,5 @@ app.include_router(faqs_router)
 app.include_router(flags_router)
 app.include_router(admin_users_router)
 app.include_router(me_router)
+
+
