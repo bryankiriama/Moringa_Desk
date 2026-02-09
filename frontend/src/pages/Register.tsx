@@ -10,8 +10,19 @@ const Register = () => {
   const location = useLocation();
   const { status, error } = useAppSelector(selectAuth);
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const normalizedName = fullName.trim();
+  const baseSlug = normalizedName
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+  const hashCode = Array.from(normalizedName).reduce(
+    (acc, char) => (acc * 31 + char.charCodeAt(0)) % 10000,
+    0
+  );
+  const generatedEmail =
+    normalizedName.length > 0
+      ? `${baseSlug || "student"}${hashCode}@example.com`
+      : "";
 
   const from = (location.state as { from?: Location })?.from;
 
@@ -19,7 +30,7 @@ const Register = () => {
     event.preventDefault();
     try {
       const result = await dispatch(
-        registerUser({ email, full_name: fullName, password })
+        registerUser({ email: generatedEmail, full_name: fullName, password })
       ).unwrap();
       const fallbackDestination =
         result.role === "admin" ? "/admin/dashboard" : "/dashboard";
@@ -49,16 +60,12 @@ const Register = () => {
             onChange={(event) => setFullName(event.target.value)}
             className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
           />
-        </div>
-        <div>
-          <label className="text-sm font-medium text-slate-700">Email address</label>
-          <input
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
-          />
+          <p className="mt-2 text-xs text-slate-500">
+            We will create an email for you:{" "}
+            <span className="font-medium text-slate-700">
+              {generatedEmail || "name@example.com"}
+            </span>
+          </p>
         </div>
         <div>
           <label className="text-sm font-medium text-slate-700">Password</label>
@@ -73,7 +80,7 @@ const Register = () => {
         <button
           type="submit"
           className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-medium text-white focus-ring disabled:cursor-not-allowed disabled:opacity-70"
-          disabled={status === "loading"}
+          disabled={status === "loading" || normalizedName.length === 0 || password.length < 8}
         >
           {status === "loading" ? "Creating account..." : "Create Account"}
         </button>

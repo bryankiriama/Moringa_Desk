@@ -1,11 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 
 import Sidebar from "../components/layout/Sidebar";
 import Topbar from "../components/layout/Topbar";
+import { useAppDispatch } from "../app/hooks";
+import { fetchNotifications } from "../features/notifications/notificationsSlice";
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(fetchNotifications(undefined));
+  }, [dispatch]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">

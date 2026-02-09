@@ -1,7 +1,7 @@
 import { NavLink, matchPath, useLocation } from "react-router-dom";
 
-import { useAppSelector } from "../../app/hooks";
-import { selectAuth } from "../../features/auth/authSlice";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { logout, selectAuth } from "../../features/auth/authSlice";
 
 type SidebarVariant = "student" | "admin";
 
@@ -43,6 +43,7 @@ const adminItems: SidebarItem[] = [
 const Sidebar = ({ variant, isOpen, onClose }: SidebarProps) => {
   const items = variant === "admin" ? adminItems : studentItems;
   const location = useLocation();
+  const dispatch = useAppDispatch();
   const { displayName, role } = useAppSelector(selectAuth);
   const resolvedName =
     displayName ?? (role === "admin" ? "Admin User" : "Student User");
@@ -114,6 +115,13 @@ const Sidebar = ({ variant, isOpen, onClose }: SidebarProps) => {
                 </p>
               </div>
             </div>
+            <button
+              type="button"
+              onClick={() => dispatch(logout())}
+              className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 focus-ring"
+            >
+              Logout
+            </button>
           </div>
         </div>
       </div>
