@@ -8,6 +8,7 @@ import votesReducer from "../features/votes/votesSlice";
 import flagsReducer from "../features/flags/flagsSlice";
 import followsReducer from "../features/follows/followsSlice";
 import adminReducer from "../features/admin/adminSlice";
+import meReducer from "../features/me/meSlice";
 
 export const store = configureStore({
   reducer: {
@@ -19,6 +20,7 @@ export const store = configureStore({
     flags: flagsReducer,
     follows: followsReducer,
     admin: adminReducer,
+    me: meReducer,
   },
 });
 

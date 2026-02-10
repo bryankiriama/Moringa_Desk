@@ -29,6 +29,7 @@ def register_user_endpoint(
             email=payload.email,
             full_name=payload.full_name,
             password=payload.password,
+            role=payload.role,
         )
     except ValueError:
         raise HTTPException(
@@ -37,7 +38,9 @@ def register_user_endpoint(
         )
 
     access_token = create_access_token(sub=str(user.id))
-    return TokenResponse(access_token=access_token, token_type="bearer")
+    return TokenResponse(
+        access_token=access_token, token_type="bearer", role=user.role
+    )
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -52,7 +55,9 @@ def login_user_endpoint(
         )
 
     access_token = create_access_token(sub=str(user.id))
-    return TokenResponse(access_token=access_token, token_type="bearer")
+    return TokenResponse(
+        access_token=access_token, token_type="bearer", role=user.role
+    )
 
 
 @router.post("/forgot-password")

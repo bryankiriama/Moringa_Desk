@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
 import type { RootState } from "../../app/store";
-import { login, register } from "../../api/auth";
+import { getCurrentUser, login, register } from "../../api/auth";
 import { AUTH_NAME_KEY, AUTH_ROLE_KEY, AUTH_TOKEN_KEY } from "../../api/client";
 import type { UserRole } from "../../types";
 
@@ -74,6 +74,21 @@ export const registerUser = createAsyncThunk(
   }
 );
 
+export const fetchCurrentUser = createAsyncThunk(
+  "auth/me",
+  async (_, { rejectWithValue }) => {
+    try {
+      const user = await getCurrentUser();
+      const role = user.role ?? "student";
+      localStorage.setItem(AUTH_ROLE_KEY, role);
+      localStorage.setItem(AUTH_NAME_KEY, user.full_name);
+      return { role, displayName: user.full_name };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -118,6 +133,19 @@ const authSlice = createSlice({
       .addCase(registerUser.rejected, (state, action) => {
         state.status = "failed";
         state.error = (action.payload as string) ?? "Registration failed";
+      })
+      .addCase(fetchCurrentUser.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(fetchCurrentUser.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.role = action.payload.role;
+        state.displayName = action.payload.displayName;
+      })
+      .addCase(fetchCurrentUser.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = (action.payload as string) ?? "Failed to load user";
       });
   },
 });

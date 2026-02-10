@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import Badge from "../components/ui/Badge";
 import EmptyState from "../components/ui/EmptyState";
@@ -6,10 +6,12 @@ import Pagination from "../components/ui/Pagination";
 import QuestionCard from "../components/ui/QuestionCard";
 import TagChip from "../components/ui/TagChip";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { listTags } from "../api/questions";
 import { createFlagItem, selectFlags } from "../features/flags/flagsSlice";
 import { fetchQuestions, selectQuestions } from "../features/questions/questionsSlice";
 import { castVoteItem, selectVotes } from "../features/votes/votesSlice";
-import type { QuestionCardData, TagChipData } from "../types";
+import { formatAbsoluteTime } from "../utils/time";
+import type { QuestionCardData, Tag, TagChipData } from "../types";
 
 const filters: TagChipData[] = [
   { label: "Newest", active: true },
@@ -17,15 +19,7 @@ const filters: TagChipData[] = [
   { label: "Unanswered" },
 ];
 
-const tagFilters: TagChipData[] = [
-  { label: "All", active: true },
-  { label: "React" },
-  { label: "Python" },
-  { label: "JavaScript" },
-  { label: "Databases" },
-  { label: "DevOps" },
-  { label: "API" },
-];
+type TagLoadStatus = "idle" | "loading" | "succeeded" | "failed";
 
 const QuestionsList = () => {
   const dispatch = useAppDispatch();
@@ -34,23 +28,69 @@ const QuestionsList = () => {
   const { status: flagStatus, error: flagError } = useAppSelector(selectFlags);
   const isVoting = voteStatus === "loading";
   const isFlagging = flagStatus === "loading";
+  const [tagStatus, setTagStatus] = useState<TagLoadStatus>("idle");
+  const [tagError, setTagError] = useState<string | null>(null);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [activeTag, setActiveTag] = useState<string>("All");
 
   useEffect(() => {
-    dispatch(fetchQuestions(undefined));
-  }, [dispatch]);
+    let mounted = true;
+    const loadTags = async () => {
+      setTagStatus("loading");
+      setTagError(null);
+      try {
+        const response = await listTags();
+        if (mounted) {
+          setTags(response);
+          setTagStatus("succeeded");
+        }
+      } catch {
+        if (mounted) {
+          setTagStatus("failed");
+          setTagError("Unable to load tags");
+        }
+      }
+    };
+    loadTags();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (activeTag === "All") {
+      dispatch(fetchQuestions(undefined));
+    } else {
+      dispatch(fetchQuestions({ tag: activeTag }));
+    }
+  }, [activeTag, dispatch]);
+
+  const tagFilters: TagChipData[] = useMemo(() => {
+    const base = [{ label: "All", active: activeTag === "All" }];
+    const dynamic = tags.map((tag) => ({
+      label: tag.name,
+      active: tag.name === activeTag,
+    }));
+    return [...base, ...dynamic];
+  }, [activeTag, tags]);
 
   const handleVote = async (questionId: string, value: 1 | -1) => {
+    const scrollY = window.scrollY;
     try {
       await dispatch(
         castVoteItem({ target_type: "question", target_id: questionId, value })
       ).unwrap();
       await dispatch(fetchQuestions(undefined));
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollY, behavior: "auto" });
+      });
     } catch {
       // errors handled in state
     }
   };
 
   const handleFlag = async (questionId: string) => {
+    const scrollY = window.scrollY;
     try {
       await dispatch(
         createFlagItem({
@@ -60,6 +100,9 @@ const QuestionsList = () => {
         })
       ).unwrap();
       await dispatch(fetchQuestions(undefined));
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollY, behavior: "auto" });
+      });
     } catch {
       // errors handled in state
     }
@@ -69,26 +112,29 @@ const QuestionsList = () => {
     <span className="inline-flex items-center gap-2">
       <button
         type="button"
-        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
         onClick={() => handleVote(questionId, 1)}
         disabled={isVoting}
       >
+        👍
         Upvote
       </button>
       <button
         type="button"
-        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
         onClick={() => handleVote(questionId, -1)}
         disabled={isVoting}
       >
+        👎
         Downvote
       </button>
       <button
         type="button"
-        className="rounded-full border border-rose-200 px-3 py-1 text-xs font-medium text-rose-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 px-3 py-1 text-xs font-medium text-rose-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
         onClick={() => handleFlag(questionId)}
         disabled={isFlagging}
       >
+        🚩
         Flag
       </button>
     </span>
@@ -97,8 +143,15 @@ const QuestionsList = () => {
   const questionCards: QuestionCardData[] = items.map((question) => ({
     question,
     tags: [],
-    meta: { author: "Community Member", time: "Recently" },
-    stats: { answers: 0, views: 0, votes: question.vote_score },
+    meta: {
+      author: question.author_name ?? "Community Member",
+      time: formatAbsoluteTime(question.created_at),
+    },
+    stats: {
+      answers: question.answers_count ?? 0,
+      views: question.views_count ?? 0,
+      votes: question.vote_score,
+    },
     statusLabel: question.accepted_answer_id ? "Answered" : undefined,
     statusVariant: question.accepted_answer_id ? "success" : undefined,
     action: renderActions(question.id),
@@ -128,9 +181,22 @@ const QuestionsList = () => {
 
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm text-slate-500">Filter by tags:</span>
-        {tagFilters.map((tag) => (
-          <TagChip key={tag.label} label={tag.label} active={tag.active} />
-        ))}
+        {tagStatus === "loading" ? (
+          <span className="text-xs text-slate-400">Loading tags...</span>
+        ) : null}
+        {tagStatus === "failed" ? (
+          <span className="text-xs text-rose-500">{tagError}</span>
+        ) : null}
+        {tagStatus === "succeeded"
+          ? tagFilters.map((tag) => (
+              <TagChip
+                key={tag.label}
+                label={tag.label}
+                active={tag.active}
+                onClick={() => setActiveTag(tag.label)}
+              />
+            ))
+          : null}
       </div>
 
       {status === "loading" || status === "idle" ? (

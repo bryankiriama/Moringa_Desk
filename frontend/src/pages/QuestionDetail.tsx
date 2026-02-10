@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 import Badge from "../components/ui/Badge";
 import EmptyState from "../components/ui/EmptyState";
@@ -27,6 +27,7 @@ import {
 } from "../features/questions/questionsSlice";
 import { castVoteItem, selectVotes } from "../features/votes/votesSlice";
 import type { QuestionCardData, Tag } from "../types";
+import { formatAbsoluteTime } from "../utils/time";
 
 const QuestionDetail = () => {
   const { questionId } = useParams();
@@ -78,16 +79,29 @@ const QuestionDetail = () => {
   const question: QuestionCardData = {
     question: detail,
     tags: detail.tags,
-    meta: { author: "Community Member", time: "Recently" },
-    stats: { answers: answers.length, views: 0 },
+    meta: {
+      author: detail.author_name ?? "Community Member",
+      time: formatAbsoluteTime(detail.created_at),
+    },
+    stats: {
+      answers: detail.answers_count ?? answers.length,
+      views: detail.views_count ?? 0,
+    },
   };
 
   const relatedQuestions: QuestionCardData[] = detail.related_questions.map(
     (related) => ({
       question: related,
       tags: [] as Tag[],
-      meta: { author: "Community Member", time: "Recently" },
-      stats: { answers: 0, views: 0, votes: related.vote_score },
+      meta: {
+        author: related.author_name ?? "Community Member",
+        time: formatAbsoluteTime(related.created_at),
+      },
+      stats: {
+        answers: related.answers_count ?? 0,
+        views: related.views_count ?? 0,
+        votes: related.vote_score,
+      },
       statusLabel: related.accepted_answer_id ? "Answered" : undefined,
       statusVariant: related.accepted_answer_id ? "success" : undefined,
     })
@@ -127,11 +141,15 @@ const QuestionDetail = () => {
     if (!questionId) {
       return;
     }
+    const scrollY = window.scrollY;
     try {
       await dispatch(
         castVoteItem({ target_type: "question", target_id: questionId, value })
       ).unwrap();
       await dispatch(fetchQuestionDetail(questionId));
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollY, behavior: "auto" });
+      });
     } catch {
       // errors handled in state
     }
@@ -141,11 +159,15 @@ const QuestionDetail = () => {
     if (!questionId) {
       return;
     }
+    const scrollY = window.scrollY;
     try {
       await dispatch(
         castVoteItem({ target_type: "answer", target_id: answerId, value })
       ).unwrap();
       await dispatch(fetchAnswers(questionId));
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollY, behavior: "auto" });
+      });
     } catch {
       // errors handled in state
     }
@@ -155,6 +177,7 @@ const QuestionDetail = () => {
     if (!questionId) {
       return;
     }
+    const scrollY = window.scrollY;
     try {
       await dispatch(
         createFlagItem({
@@ -164,6 +187,9 @@ const QuestionDetail = () => {
         })
       ).unwrap();
       await dispatch(fetchQuestionDetail(questionId));
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollY, behavior: "auto" });
+      });
     } catch {
       // errors handled in state
     }
@@ -173,6 +199,7 @@ const QuestionDetail = () => {
     if (!questionId) {
       return;
     }
+    const scrollY = window.scrollY;
     try {
       await dispatch(
         createFlagItem({
@@ -182,6 +209,9 @@ const QuestionDetail = () => {
         })
       ).unwrap();
       await dispatch(fetchAnswers(questionId));
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollY, behavior: "auto" });
+      });
     } catch {
       // errors handled in state
     }
@@ -205,7 +235,10 @@ const QuestionDetail = () => {
 
   return (
     <div className="space-y-6">
-      <SectionCard title="Question Detail" subtitle="Asked by a community member">
+      <SectionCard
+        title="Question Detail"
+        subtitle={`Asked by ${detail.author_name ?? "Community Member"}`}
+      >
         <div className="space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -238,34 +271,38 @@ const QuestionDetail = () => {
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
               onClick={() => handleVoteQuestion(1)}
               disabled={isVoting}
             >
+              👍
               Upvote
             </button>
             <button
               type="button"
-              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
               onClick={() => handleVoteQuestion(-1)}
               disabled={isVoting}
             >
+              👎
               Downvote
             </button>
             <button
               type="button"
-              className="rounded-full border border-rose-200 px-3 py-1 text-xs font-medium text-rose-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 px-3 py-1 text-xs font-medium text-rose-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
               onClick={handleFlagQuestion}
               disabled={isFlagging}
             >
+              🚩
               Flag
             </button>
             <button
               type="button"
-              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
               onClick={handleToggleFollow}
               disabled={isFollowingBusy}
             >
+              ⭐
               {isFollowingBusy
                 ? "Updating..."
                 : isFollowing
@@ -305,9 +342,11 @@ const QuestionDetail = () => {
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <p className="text-sm font-semibold text-slate-900">
-                      Community Member
+                      {answer.author_name ?? "Community Member"}
                     </p>
-                    <p className="text-xs text-slate-500">Recently</p>
+                    <p className="text-xs text-slate-500">
+                      {formatAbsoluteTime(answer.created_at)}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge label={`${answer.vote_score} votes`} variant="neutral" />
@@ -329,26 +368,29 @@ const QuestionDetail = () => {
                 <div className="mt-4 flex flex-wrap gap-2">
                   <button
                     type="button"
-                    className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
                     onClick={() => handleVoteAnswer(answer.id, 1)}
                     disabled={isVoting}
                   >
+                    👍
                     Upvote
                   </button>
                   <button
                     type="button"
-                    className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
                     onClick={() => handleVoteAnswer(answer.id, -1)}
                     disabled={isVoting}
                   >
+                    👎
                     Downvote
                   </button>
                   <button
                     type="button"
-                    className="rounded-full border border-rose-200 px-3 py-1 text-xs font-medium text-rose-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 px-3 py-1 text-xs font-medium text-rose-600 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
                     onClick={() => handleFlagAnswer(answer.id)}
                     disabled={isFlagging}
                   >
+                    🚩
                     Flag
                   </button>
                 </div>
@@ -395,19 +437,22 @@ const QuestionDetail = () => {
       </SectionCard>
 
       <SectionCard title="Related Questions" subtitle="You may also find these helpful">
-        <div className="space-y-4">
-          {relatedQuestions.length === 0 ? (
-            <EmptyState title="No related questions" description="Check back later." />
-          ) : (
-            relatedQuestions.map((related) => (
-              <QuestionCard
-                key={related.question.id}
-                {...related}
-                to={`/questions/${related.question.id}`}
-              />
-            ))
-          )}
-        </div>
+        {relatedQuestions.length === 0 ? (
+          <EmptyState title="No related questions" description="Check back later." />
+        ) : (
+          <ul className="space-y-2 text-sm">
+            {relatedQuestions.map((related) => (
+              <li key={related.question.id}>
+                <Link
+                  to={`/questions/${related.question.id}`}
+                  className="font-medium text-indigo-600 hover:text-indigo-500 focus-ring"
+                >
+                  {related.question.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </SectionCard>
     </div>
   );

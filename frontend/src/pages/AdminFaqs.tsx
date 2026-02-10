@@ -6,8 +6,10 @@ import SectionCard from "../components/ui/SectionCard";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import {
   createFaqItem,
+  deleteFaqItem,
   fetchAdminFaqs,
   selectAdmin,
+  updateFaqItem,
 } from "../features/admin/adminSlice";
 import type { FAQ } from "../types";
 
@@ -19,10 +21,22 @@ const tabs = [
 
 const AdminFaqs = () => {
   const dispatch = useAppDispatch();
-  const { faqs, faqsStatus, faqsError, createFaqStatus, createFaqError } =
-    useAppSelector(selectAdmin);
+  const {
+    faqs,
+    faqsStatus,
+    faqsError,
+    createFaqStatus,
+    createFaqError,
+    updateFaqStatus,
+    updateFaqError,
+    deleteFaqStatus,
+    deleteFaqError,
+  } = useAppSelector(selectAdmin);
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editQuestion, setEditQuestion] = useState("");
+  const [editAnswer, setEditAnswer] = useState("");
 
   const maxQuestionLength = 200;
   const maxAnswerLength = 500;
@@ -38,6 +52,8 @@ const AdminFaqs = () => {
 
   const isLoading = faqsStatus === "loading" || faqsStatus === "idle";
   const isCreating = createFaqStatus === "loading";
+  const isUpdating = updateFaqStatus === "loading";
+  const isDeleting = deleteFaqStatus === "loading";
 
   useEffect(() => {
     dispatch(fetchAdminFaqs());
@@ -55,6 +71,43 @@ const AdminFaqs = () => {
       setQuestion("");
       setAnswer("");
       await dispatch(fetchAdminFaqs());
+    } catch {
+      // errors handled in state
+    }
+  };
+
+  const startEdit = (faq: FAQ) => {
+    setEditingId(faq.id);
+    setEditQuestion(faq.question);
+    setEditAnswer(faq.answer);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditQuestion("");
+    setEditAnswer("");
+  };
+
+  const handleUpdateFaq = async (faqId: string) => {
+    const trimmedEditQuestion = editQuestion.trim();
+    const trimmedEditAnswer = editAnswer.trim();
+    if (!trimmedEditQuestion || !trimmedEditAnswer) return;
+    try {
+      await dispatch(
+        updateFaqItem({
+          faqId,
+          data: { question: trimmedEditQuestion, answer: trimmedEditAnswer },
+        })
+      ).unwrap();
+      cancelEdit();
+    } catch {
+      // errors handled in state
+    }
+  };
+
+  const handleDeleteFaq = async (faqId: string) => {
+    try {
+      await dispatch(deleteFaqItem(faqId)).unwrap();
     } catch {
       // errors handled in state
     }
@@ -148,6 +201,12 @@ const AdminFaqs = () => {
             <p className="text-sm text-rose-600">{createFaqError}</p>
           ) : null}
         </form>
+        {updateFaqError ? (
+          <p className="mb-3 text-sm text-rose-600">{updateFaqError}</p>
+        ) : null}
+        {deleteFaqError ? (
+          <p className="mb-3 text-sm text-rose-600">{deleteFaqError}</p>
+        ) : null}
 
         {isLoading ? (
           <EmptyState title="Loading FAQs..." description="Fetching FAQ entries." />
@@ -164,28 +223,79 @@ const AdminFaqs = () => {
             {faqs.map((faq: FAQ) => (
               <div
                 key={faq.id}
-                className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4"
+                className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-4"
               >
-                <div>
-                  <p className="text-sm font-semibold text-slate-900">{faq.question}</p>
-                  <p className="text-xs text-slate-500">Views: N/A</p>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-slate-400">
-                  <button
-                    type="button"
-                    className="rounded-md text-slate-500 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
-                    disabled
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-md text-rose-500 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
-                    disabled
-                  >
-                    Delete
-                  </button>
-                </div>
+                {editingId === faq.id ? (
+                  <div className="w-full space-y-3">
+                    <div>
+                      <label className="text-xs font-medium text-slate-600">
+                        Question
+                      </label>
+                      <input
+                        type="text"
+                        value={editQuestion}
+                        onChange={(event) => setEditQuestion(event.target.value)}
+                        className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-600">
+                        Answer
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={editAnswer}
+                        onChange={(event) => setEditAnswer(event.target.value)}
+                        className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
+                      />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        className="rounded-full bg-indigo-600 px-4 py-2 text-xs font-medium text-white focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                        onClick={() => handleUpdateFaq(faq.id)}
+                        disabled={isUpdating}
+                      >
+                        {isUpdating ? "Saving..." : "Save"}
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-full border border-slate-200 px-4 py-2 text-xs font-medium text-slate-600 focus-ring"
+                        onClick={cancelEdit}
+                        disabled={isUpdating}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">
+                        {faq.question}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">{faq.answer}</p>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-slate-400">
+                      <button
+                        type="button"
+                        className="rounded-md text-slate-500 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                        onClick={() => startEdit(faq)}
+                        disabled={isUpdating || isDeleting}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-md text-rose-500 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                        onClick={() => handleDeleteFaq(faq.id)}
+                        disabled={isDeleting}
+                      >
+                        {isDeleting ? "Deleting..." : "Delete"}
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ))}
           </div>

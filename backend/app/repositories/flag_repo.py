@@ -52,3 +52,12 @@ def list_flags(
         stmt = stmt.where(Flag.target_id == target_id)
     stmt = stmt.order_by(Flag.created_at.desc())
     return list(session.scalars(stmt).all())
+
+
+def delete_flag(session: Session, *, flag_id) -> bool:
+    flag = session.get(Flag, flag_id)
+    if flag is None:
+        return False
+    session.delete(flag)
+    session.commit()
+    return True

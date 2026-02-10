@@ -12,6 +12,26 @@ from backend.app.repositories.user_repo import get_user_by_id
 security = HTTPBearer(auto_error=False)
 
 
+def get_optional_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
+    db: Session = Depends(get_db),
+):
+    if credentials is None:
+        return None
+
+    token = credentials.credentials
+    try:
+        payload = decode_token(token)
+        sub = payload.get("sub")
+        if not sub:
+            return None
+        user_id = uuid.UUID(sub)
+    except (JWTError, ValueError):
+        return None
+
+    return get_user_by_id(db, user_id)
+
+
 def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(security),
     db: Session = Depends(get_db),

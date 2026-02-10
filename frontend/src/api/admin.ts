@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import type { FAQ, Tag, User } from "../types";
+import type { FAQ, Flag, Tag, User } from "../types";
 
 export type UserRoleUpdateRequest = {
   role: "student" | "admin";
@@ -12,6 +12,11 @@ export type TagCreateRequest = {
 export type FAQCreateRequest = {
   question: string;
   answer: string;
+};
+
+export type FAQUpdateRequest = {
+  question?: string;
+  answer?: string;
 };
 
 export const listUsers = async (): Promise<User[]> => {
@@ -45,4 +50,33 @@ export const listFaqs = async (): Promise<FAQ[]> => {
 export const createFaq = async (payload: FAQCreateRequest): Promise<FAQ> => {
   const response = await apiClient.post<FAQ>("/faqs", payload);
   return response.data;
+};
+
+export const updateFaq = async (
+  faqId: string,
+  payload: FAQUpdateRequest
+): Promise<FAQ> => {
+  const response = await apiClient.patch<FAQ>(`/faqs/${faqId}`, payload);
+  return response.data;
+};
+
+export const deleteFaq = async (faqId: string): Promise<void> => {
+  await apiClient.delete(`/faqs/${faqId}`);
+};
+
+export const listFlags = async (): Promise<Flag[]> => {
+  const response = await apiClient.get<Flag[]>("/flags");
+  return response.data;
+};
+
+export const deleteFlag = async (flagId: string): Promise<void> => {
+  await apiClient.delete(`/flags/${flagId}`);
+};
+
+export const deleteQuestion = async (questionId: string): Promise<void> => {
+  await apiClient.delete(`/admin/content/questions/${questionId}`);
+};
+
+export const deleteAnswer = async (answerId: string): Promise<void> => {
+  await apiClient.delete(`/admin/content/answers/${answerId}`);
 };

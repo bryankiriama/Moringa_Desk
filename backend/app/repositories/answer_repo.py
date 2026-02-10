@@ -1,4 +1,5 @@
 from sqlalchemy import select
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from backend.app.models.answer import Answer
@@ -45,3 +46,8 @@ def list_answers_by_author(session: Session, *, author_id) -> list[Answer]:
         .order_by(Answer.created_at.desc())
     )
     return list(session.scalars(stmt).all())
+
+
+def count_answers_for_question(session: Session, *, question_id) -> int:
+    stmt = select(func.count()).select_from(Answer).where(Answer.question_id == question_id)
+    return int(session.scalar(stmt) or 0)

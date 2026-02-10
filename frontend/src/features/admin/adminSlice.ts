@@ -6,11 +6,14 @@ import type { FAQ, Tag, User } from "../../types";
 import {
   createFaq,
   createTag,
+  deleteFaq,
   listFaqs,
   listTags,
   listUsers,
+  updateFaq,
   updateUserRole,
   type FAQCreateRequest,
+  type FAQUpdateRequest,
   type TagCreateRequest,
   type UserRoleUpdateRequest,
 } from "../../api/admin";
@@ -33,6 +36,10 @@ type AdminState = {
   faqsError: string | null;
   createFaqStatus: LoadStatus;
   createFaqError: string | null;
+  updateFaqStatus: LoadStatus;
+  updateFaqError: string | null;
+  deleteFaqStatus: LoadStatus;
+  deleteFaqError: string | null;
 };
 
 const initialState: AdminState = {
@@ -51,6 +58,10 @@ const initialState: AdminState = {
   faqsError: null,
   createFaqStatus: "idle",
   createFaqError: null,
+  updateFaqStatus: "idle",
+  updateFaqError: null,
+  deleteFaqStatus: "idle",
+  deleteFaqError: null,
 };
 
 const getErrorMessage = (error: unknown) => {
@@ -129,6 +140,32 @@ export const createFaqItem = createAsyncThunk(
   async (payload: FAQCreateRequest, { rejectWithValue }) => {
     try {
       return await createFaq(payload);
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  }
+);
+
+export const updateFaqItem = createAsyncThunk(
+  "admin/faqs/update",
+  async (
+    payload: { faqId: string; data: FAQUpdateRequest },
+    { rejectWithValue }
+  ) => {
+    try {
+      return await updateFaq(payload.faqId, payload.data);
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  }
+);
+
+export const deleteFaqItem = createAsyncThunk(
+  "admin/faqs/delete",
+  async (faqId: string, { rejectWithValue }) => {
+    try {
+      await deleteFaq(faqId);
+      return faqId;
     } catch (error) {
       return rejectWithValue(getErrorMessage(error));
     }
@@ -217,6 +254,34 @@ const adminSlice = createSlice({
         state.createFaqStatus = "failed";
         state.createFaqError =
           (action.payload as string) ?? "Failed to create FAQ";
+      })
+      .addCase(updateFaqItem.pending, (state) => {
+        state.updateFaqStatus = "loading";
+        state.updateFaqError = null;
+      })
+      .addCase(updateFaqItem.fulfilled, (state, action) => {
+        state.updateFaqStatus = "succeeded";
+        state.faqs = state.faqs.map((faq) =>
+          faq.id === action.payload.id ? action.payload : faq
+        );
+      })
+      .addCase(updateFaqItem.rejected, (state, action) => {
+        state.updateFaqStatus = "failed";
+        state.updateFaqError =
+          (action.payload as string) ?? "Failed to update FAQ";
+      })
+      .addCase(deleteFaqItem.pending, (state) => {
+        state.deleteFaqStatus = "loading";
+        state.deleteFaqError = null;
+      })
+      .addCase(deleteFaqItem.fulfilled, (state, action) => {
+        state.deleteFaqStatus = "succeeded";
+        state.faqs = state.faqs.filter((faq) => faq.id !== action.payload);
+      })
+      .addCase(deleteFaqItem.rejected, (state, action) => {
+        state.deleteFaqStatus = "failed";
+        state.deleteFaqError =
+          (action.payload as string) ?? "Failed to delete FAQ";
       });
   },
 });

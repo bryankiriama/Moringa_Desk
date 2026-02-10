@@ -10,6 +10,7 @@ export type RegisterRequest = {
   email: string;
   full_name: string;
   password: string;
+  role: "student" | "admin";
 };
 
 export type TokenResponse = {
@@ -37,15 +38,15 @@ export const register = async (payload: RegisterRequest): Promise<TokenResponse>
   return response.data;
 };
 
-// TODO: Implement API calls
-export const forgotPassword = async (_payload: ForgotPasswordRequest): Promise<void> => {
-  throw new Error("Not implemented");
+export const forgotPassword = async (payload: ForgotPasswordRequest): Promise<void> => {
+  await apiClient.post("/auth/forgot-password", payload);
 };
 
-export const resetPassword = async (_payload: ResetPasswordRequest): Promise<void> => {
-  throw new Error("Not implemented");
+export const resetPassword = async (payload: ResetPasswordRequest): Promise<void> => {
+  await apiClient.post("/auth/reset-password", payload);
 };
 
 export const getCurrentUser = async (): Promise<User> => {
-  throw new Error("Not implemented");
+  const response = await apiClient.get<User>("/me/profile");
+  return response.data;
 };

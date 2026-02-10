@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api.admin_users import router as admin_users_router
+from backend.app.api.admin_content import router as admin_content_router
 from backend.app.api.answers import router as answers_router
 from backend.app.api.auth import router as auth_router
 from backend.app.api.faqs import router as faqs_router
@@ -14,8 +15,22 @@ from backend.app.api.questions import router as questions_router
 from backend.app.api.related_questions import router as related_router
 from backend.app.api.tags import router as tags_router
 from backend.app.api.votes import router as votes_router
+from sqlalchemy import inspect, text
+
+from backend.app.db.base import Base
+from backend.app.db.session import engine
+from backend.app import models  # noqa: F401
 
 app = FastAPI(title="Moringa Desk API")
+
+Base.metadata.create_all(bind=engine)
+
+inspector = inspect(engine)
+if "question_views" in inspector.get_table_names():
+    columns = {col["name"] for col in inspector.get_columns("question_views")}
+    if "viewer_session" not in columns:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE question_views ADD COLUMN viewer_session TEXT"))
 
 app.add_middleware(
     CORSMiddleware,
@@ -40,4 +55,5 @@ app.include_router(related_router)
 app.include_router(faqs_router)
 app.include_router(flags_router)
 app.include_router(admin_users_router)
+app.include_router(admin_content_router)
 app.include_router(me_router)

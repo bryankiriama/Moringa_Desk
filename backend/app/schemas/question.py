@@ -14,6 +14,7 @@ class QuestionCreate(BaseModel):
 class QuestionOut(BaseModel):
     id: uuid.UUID
     author_id: uuid.UUID
+    author_name: str | None
     title: str
     body: str
     category: str
@@ -21,6 +22,8 @@ class QuestionOut(BaseModel):
     accepted_answer_id: uuid.UUID | None
     created_at: datetime
     updated_at: datetime
+    answers_count: int
+    views_count: int
     vote_score: int
 
     model_config = ConfigDict(from_attributes=True)

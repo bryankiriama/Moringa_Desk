@@ -19,6 +19,7 @@ import {
   selectQuestions,
 } from "../features/questions/questionsSlice";
 import type { MetricCardData, QuestionCardData, QuestionDetail } from "../types";
+import { formatAbsoluteTime } from "../utils/time";
 
 const ChatIcon = () => (
   <svg
@@ -309,13 +310,18 @@ const Dashboard = () => {
   ];
 
   const contributors: Contributor[] = useMemo(() => {
-    const map = new Map<string, { answers: number; votes: number }>();
+    const map = new Map<string, { answers: number; votes: number; name?: string }>();
     questionDetails.forEach((detail) => {
       detail.answers.forEach((answer) => {
-        const current = map.get(answer.author_id) ?? { answers: 0, votes: 0 };
+        const current = map.get(answer.author_id) ?? {
+          answers: 0,
+          votes: 0,
+          name: answer.author_name ?? undefined,
+        };
         map.set(answer.author_id, {
           answers: current.answers + 1,
           votes: current.votes + (answer.vote_score ?? 0),
+          name: current.name ?? answer.author_name ?? undefined,
         });
       });
     });
@@ -323,7 +329,7 @@ const Dashboard = () => {
     return Array.from(map.entries())
       .map(([id, data], index) => ({
         id,
-        name: `User ${id.slice(0, 6)}`,
+        name: data.name ?? `User ${id.slice(0, 6)}`,
         answers: data.answers,
         votes: data.votes,
         badge: "Expert",
@@ -339,12 +345,79 @@ const Dashboard = () => {
       .map((detail) => ({
         question: detail,
         tags: detail.tags ?? [],
-        meta: { author: `User ${detail.author_id.slice(0, 6)}`, time: "Recently" },
-        stats: { answers: 0, views: 0, votes: detail.vote_score },
+        meta: {
+          author: detail.author_name ?? `User ${detail.author_id.slice(0, 6)}`,
+          time: formatAbsoluteTime(detail.created_at),
+        },
+        stats: {
+          answers: detail.answers_count ?? detail.answers.length,
+          views: detail.views_count ?? 0,
+          votes: detail.vote_score,
+        },
       }));
   }, [questionDetails]);
 
   const pendingCount = unansweredQuestions.length;
+
+  const activitySeries = useMemo(() => {
+    const days = 14;
+    const labels: string[] = [];
+    const questionCounts = Array.from({ length: days }, () => 0);
+    const answerCounts = Array.from({ length: days }, () => 0);
+
+    const now = new Date();
+    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    end.setHours(0, 0, 0, 0);
+    const base = new Date(end);
+    base.setDate(end.getDate() - (days - 1));
+
+    for (let i = 0; i < days; i += 1) {
+      const date = new Date(base);
+      date.setDate(base.getDate() + i);
+      labels.push(
+        date.toLocaleString(undefined, { month: "short", day: "numeric" })
+      );
+    }
+
+    const dayIndex = (iso?: string) => {
+      if (!iso) return -1;
+      const date = new Date(iso);
+      if (Number.isNaN(date.getTime())) return -1;
+      date.setHours(0, 0, 0, 0);
+      const diffDays = Math.floor(
+        (date.getTime() - base.getTime()) / (24 * 60 * 60 * 1000)
+      );
+      return diffDays >= 0 && diffDays < days ? diffDays : -1;
+    };
+
+    questionDetails.forEach((question) => {
+      const idx = dayIndex(question.created_at);
+      if (idx >= 0) questionCounts[idx] += 1;
+      question.answers.forEach((answer) => {
+        const aidx = dayIndex(answer.created_at);
+        if (aidx >= 0) answerCounts[aidx] += 1;
+      });
+    });
+
+    return { labels, questionCounts, answerCounts };
+  }, [questionDetails]);
+
+  const activityMax = Math.max(
+    ...activitySeries.questionCounts,
+    ...activitySeries.answerCounts,
+    1
+  );
+
+  const linePath = (values: number[], width: number, height: number) => {
+    const step = width / (values.length - 1 || 1);
+    return values
+      .map((value, index) => {
+        const x = index * step;
+        const y = height - (value / activityMax) * height;
+        return `${index === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
+      })
+      .join(" ");
+  };
 
   return (
     <div className="space-y-8">
@@ -424,28 +497,46 @@ const Dashboard = () => {
               description="Create a question to see category distribution."
             />
           ) : (
-            <div className="grid gap-4">
-              <div className="grid grid-cols-2 items-end gap-4 sm:grid-cols-3 lg:grid-cols-6">
-                {categoryData.map((item) => (
-                  <div key={item.label} className="text-center">
-                    <div className="mx-auto flex h-36 items-end justify-center sm:h-40">
-                      <div
-                        className={`w-12 rounded-2xl ${item.color}`}
-                        style={{
-                          height: `${
-                            (item.value / Math.max(...categoryData.map((d) => d.value))) *
-                            100
-                          }%`,
-                          minHeight: "12%",
-                        }}
-                      />
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                <span className="rounded-full border border-slate-200 px-2 py-0.5">
+                  Live distribution
+                </span>
+                <span className="rounded-full border border-slate-200 px-2 py-0.5">
+                  Updated now
+                </span>
+              </div>
+              <div className="space-y-3">
+                {categoryData.map((item) => {
+                  const max = Math.max(...categoryData.map((d) => d.value));
+                  const width = max === 0 ? 0 : Math.round((item.value / max) * 100);
+                  return (
+                    <div
+                      key={item.label}
+                      className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3"
+                    >
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`h-2.5 w-2.5 rounded-full ${item.color}`}
+                          />
+                          <span className="font-medium text-slate-700">
+                            {item.label}
+                          </span>
+                        </div>
+                        <span className="text-xs font-semibold text-slate-900">
+                          {item.value}
+                        </span>
+                      </div>
+                      <div className="mt-2 h-2 w-full rounded-full bg-white">
+                        <div
+                          className={`h-2 rounded-full ${item.color}`}
+                          style={{ width: `${width}%` }}
+                        />
+                      </div>
                     </div>
-                    <p className="mt-3 text-xs font-medium text-slate-600">
-                      {item.label}
-                    </p>
-                    <p className="text-xs text-slate-400">{item.value}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -463,21 +554,38 @@ const Dashboard = () => {
               description={questionsError ?? "Please try again later."}
             />
           ) : (
-            <div className="flex flex-col items-center gap-6">
-              <div
-                className="relative h-40 w-40 rounded-full sm:h-48 sm:w-48"
-                style={{ background: phaseGradient }}
-              >
-                <div className="absolute inset-5 rounded-full bg-white sm:inset-6" />
+            <div className="grid gap-6">
+              <div className="relative mx-auto h-48 w-48">
+                <div
+                  className="h-full w-full rounded-full"
+                  style={{ background: phaseGradient }}
+                />
+                <div className="absolute inset-5 rounded-full bg-white shadow-sm" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <p className="text-xs uppercase tracking-widest text-slate-400">
+                    Total
+                  </p>
+                  <p className="text-2xl font-semibold text-slate-900">
+                    {questions.length}
+                  </p>
+                  <p className="text-xs text-slate-500">questions</p>
+                </div>
               </div>
-              <div className="grid gap-2 text-sm text-slate-600">
+              <div className="space-y-2 text-sm">
                 {phaseData.map((phase) => (
-                  <div key={phase.label} className="flex items-center gap-2">
-                    <span
-                      className="h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: phase.color }}
-                    />
-                    <span>{phase.label}:</span>
+                  <div
+                    key={phase.label}
+                    className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-3 py-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="h-2.5 w-2.5 rounded-full"
+                        style={{ backgroundColor: phase.color }}
+                      />
+                      <span className="font-medium text-slate-700">
+                        {phase.label}
+                      </span>
+                    </div>
                     <span className="font-semibold text-slate-900">
                       {phase.percent}%
                     </span>
@@ -490,14 +598,97 @@ const Dashboard = () => {
       </section>
 
       <SectionCard title="Activity Timeline" subtitle="Questions and answers over time">
-        <div className="h-64 rounded-2xl border border-dashed border-slate-200 bg-gradient-to-r from-emerald-50 to-indigo-50" />
-        <div className="mt-4 flex items-center justify-center gap-6 text-xs text-slate-500">
-          <span className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-indigo-500" /> Questions
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" /> Answers
-          </span>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="relative h-64 w-full">
+            <svg viewBox="0 0 600 260" className="h-full w-full" aria-hidden>
+              <defs>
+                <linearGradient id="lineBlue" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="#6366f1" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+                </linearGradient>
+                <linearGradient id="lineGreen" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              {[0, 1, 2, 3].map((row) => (
+                <line
+                  key={row}
+                  x1="0"
+                  x2="600"
+                  y1={20 + row * 60}
+                  y2={20 + row * 60}
+                  stroke="#e2e8f0"
+                  strokeDasharray="4 6"
+                />
+              ))}
+              <path
+                d={`${linePath(activitySeries.questionCounts, 600, 240)} L600 240 L0 240 Z`}
+                fill="url(#lineBlue)"
+              />
+              <path
+                d={`${linePath(activitySeries.answerCounts, 600, 240)} L600 240 L0 240 Z`}
+                fill="url(#lineGreen)"
+              />
+              <path
+                d={linePath(activitySeries.questionCounts, 600, 240)}
+                fill="none"
+                stroke="#4f46e5"
+                strokeWidth="3"
+              />
+              <path
+                d={linePath(activitySeries.answerCounts, 600, 240)}
+                fill="none"
+                stroke="#0d9488"
+                strokeWidth="3"
+              />
+              {activitySeries.questionCounts.map((value, index) => {
+                const step = 600 / (activitySeries.questionCounts.length - 1 || 1);
+                const x = index * step;
+                const y = 240 - (value / activityMax) * 240;
+                return (
+                  <circle
+                    key={`q-${index}`}
+                    cx={x}
+                    cy={y}
+                    r="5"
+                    fill="#4f46e5"
+                  />
+                );
+              })}
+              {activitySeries.answerCounts.map((value, index) => {
+                const step = 600 / (activitySeries.answerCounts.length - 1 || 1);
+                const x = index * step;
+                const y = 240 - (value / activityMax) * 240;
+                return (
+                  <circle
+                    key={`a-${index}`}
+                    cx={x}
+                    cy={y}
+                    r="5"
+                    fill="#0d9488"
+                  />
+                );
+              })}
+            </svg>
+            <div className="absolute inset-x-0 bottom-0 flex justify-between px-2 text-xs text-slate-400">
+              {activitySeries.labels.map((label, index) =>
+                index % 3 === 0 || index === activitySeries.labels.length - 1 ? (
+                  <span key={label}>{label}</span>
+                ) : (
+                  <span key={label} />
+                )
+              )}
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500">
+            <span className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-indigo-500" /> Questions
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" /> Answers
+            </span>
+          </div>
         </div>
       </SectionCard>
 
@@ -588,8 +779,15 @@ const Dashboard = () => {
                 key={question.id}
                 question={question}
                 tags={[]}
-                meta={{ author: "Community", time: "Recently" }}
-                stats={{ answers: 0, views: 0, votes: question.vote_score }}
+                meta={{
+                  author: question.author_name ?? "Community",
+                  time: formatAbsoluteTime(question.created_at),
+                }}
+                stats={{
+                  answers: question.answers_count ?? 0,
+                  views: question.views_count ?? 0,
+                  votes: question.vote_score,
+                }}
                 to={`/questions/${question.id}`}
                 action={
                   <button

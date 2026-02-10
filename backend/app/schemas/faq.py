@@ -18,3 +18,8 @@ class FAQOut(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class FAQUpdate(BaseModel):
+    question: str | None = Field(default=None, min_length=10)
+    answer: str | None = Field(default=None, min_length=20)

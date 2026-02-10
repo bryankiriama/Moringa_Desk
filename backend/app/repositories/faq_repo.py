@@ -17,3 +17,28 @@ def create_faq(
 def list_faqs(session: Session) -> list[FAQ]:
     stmt = select(FAQ).order_by(FAQ.created_at.desc())
     return list(session.scalars(stmt).all())
+
+
+def update_faq(
+    session: Session, *, faq_id, question: str | None, answer: str | None
+) -> FAQ | None:
+    faq = session.get(FAQ, faq_id)
+    if faq is None:
+        return None
+    if question is not None:
+        faq.question = question
+    if answer is not None:
+        faq.answer = answer
+    session.add(faq)
+    session.commit()
+    session.refresh(faq)
+    return faq
+
+
+def delete_faq(session: Session, *, faq_id) -> bool:
+    faq = session.get(FAQ, faq_id)
+    if faq is None:
+        return False
+    session.delete(faq)
+    session.commit()
+    return True

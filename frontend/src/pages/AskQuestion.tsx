@@ -1,27 +1,19 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
 import SectionCard from "../components/ui/SectionCard";
 import TagChip from "../components/ui/TagChip";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { listDuplicateQuestions, listTags } from "../api/questions";
 import {
   createQuestionItem,
   selectQuestions,
 } from "../features/questions/questionsSlice";
-
-const popularTags = [
-  "Python",
-  "JavaScript",
-  "React",
-  "Node.js",
-  "Databases",
-  "PostgreSQL",
-  "MongoDB",
-  "API",
-];
+import type { Question, Tag } from "../types";
 
 const categories = ["Frontend", "Backend", "Databases", "DevOps", "Career"];
 const phases = ["Foundation", "Intermediate", "Advanced", "Expert"];
+type LoadStatus = "idle" | "loading" | "succeeded" | "failed";
 
 const AskQuestion = () => {
   const dispatch = useAppDispatch();
@@ -31,6 +23,71 @@ const AskQuestion = () => {
   const [body, setBody] = useState("");
   const [category, setCategory] = useState("");
   const [stage, setStage] = useState("");
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [tagsStatus, setTagsStatus] = useState<LoadStatus>("idle");
+  const [tagsError, setTagsError] = useState<string | null>(null);
+  const [duplicateStatus, setDuplicateStatus] = useState<LoadStatus>("idle");
+  const [duplicateError, setDuplicateError] = useState<string | null>(null);
+  const [duplicates, setDuplicates] = useState<Question[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadTags = async () => {
+      setTagsStatus("loading");
+      setTagsError(null);
+      try {
+        const response = await listTags();
+        if (mounted) {
+          setTags(response);
+          setTagsStatus("succeeded");
+        }
+      } catch {
+        if (mounted) {
+          setTagsStatus("failed");
+          setTagsError("Unable to load tags");
+        }
+      }
+    };
+    loadTags();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (title.trim().length < 10) {
+      setDuplicates([]);
+      setDuplicateStatus("idle");
+      setDuplicateError(null);
+      return;
+    }
+    setDuplicateStatus("loading");
+    setDuplicateError(null);
+    const handle = window.setTimeout(async () => {
+      try {
+        const response = await listDuplicateQuestions(title.trim());
+        setDuplicates(response);
+        setDuplicateStatus("succeeded");
+      } catch {
+        setDuplicateStatus("failed");
+        setDuplicateError("Unable to check duplicates");
+      }
+    }, 500);
+    return () => window.clearTimeout(handle);
+  }, [title]);
+
+  const duplicateSummary = useMemo(() => {
+    if (duplicateStatus === "loading") {
+      return "Checking for similar questions...";
+    }
+    if (duplicateStatus === "failed") {
+      return duplicateError ?? "Unable to check duplicates";
+    }
+    if (duplicates.length === 0) {
+      return "No similar questions found.";
+    }
+    return `${duplicates.length} similar question${duplicates.length > 1 ? "s" : ""} found.`;
+  }, [duplicateError, duplicateStatus, duplicates.length]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -78,6 +135,27 @@ const AskQuestion = () => {
               Be specific and imagine you&apos;re asking a question to another person.
             </p>
           </div>
+
+          <SectionCard
+            title="Possible duplicates"
+            subtitle={duplicateSummary}
+            className="border-dashed bg-slate-50/70"
+          >
+            {duplicateStatus === "loading" ? (
+              <p className="text-sm text-slate-500">Searching for similar questions...</p>
+            ) : duplicates.length === 0 ? (
+              <p className="text-sm text-slate-500">No duplicates detected.</p>
+            ) : (
+              <ul className="space-y-2 text-sm text-slate-600">
+                {duplicates.map((item) => (
+                  <li key={item.id} className="flex flex-col gap-1">
+                    <span className="font-medium text-slate-800">{item.title}</span>
+                    <span className="text-xs text-slate-500">{item.category} • {item.stage}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </SectionCard>
 
           <div>
             <label className="text-sm font-medium text-slate-700">Detailed Description</label>
@@ -134,9 +212,15 @@ const AskQuestion = () => {
               className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
             />
             <div className="mt-3 flex flex-wrap gap-2">
-              {popularTags.map((tag) => (
-                <TagChip key={tag} label={tag} />
-              ))}
+              {tagsStatus === "loading" ? (
+                <span className="text-xs text-slate-400">Loading tags...</span>
+              ) : null}
+              {tagsStatus === "failed" ? (
+                <span className="text-xs text-rose-500">{tagsError}</span>
+              ) : null}
+              {tagsStatus === "succeeded"
+                ? tags.map((tag) => <TagChip key={tag.id} label={tag.name} />)
+                : null}
             </div>
             <p className="mt-2 text-xs text-slate-500">
               Add up to 5 tags to help others find and answer your question.

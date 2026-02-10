@@ -56,8 +56,12 @@ const Trending = () => {
       trendScore: question.vote_score ?? 0,
       question,
       tags: [],
-      meta: { author: "Community", time: "Today" },
-      stats: { answers: 0, views: 0, votes: question.vote_score ?? 0 },
+      meta: { author: question.author_name ?? "Community", time: "Today" },
+      stats: {
+        answers: question.answers_count ?? 0,
+        views: question.views_count ?? 0,
+        votes: question.vote_score ?? 0,
+      },
       statusLabel: question.accepted_answer_id ? "Answered" : undefined,
       statusVariant: question.accepted_answer_id ? "success" : undefined,
     }));

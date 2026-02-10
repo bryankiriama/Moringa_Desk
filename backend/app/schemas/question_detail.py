@@ -11,6 +11,7 @@ from backend.app.schemas.tag import TagOut
 class QuestionDetailOut(BaseModel):
     id: uuid.UUID
     author_id: uuid.UUID
+    author_name: str | None
     title: str
     body: str
     category: str

@@ -10,19 +10,11 @@ const Register = () => {
   const location = useLocation();
   const { status, error } = useAppSelector(selectAuth);
   const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"student" | "admin">("student");
   const normalizedName = fullName.trim();
-  const baseSlug = normalizedName
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "");
-  const hashCode = Array.from(normalizedName).reduce(
-    (acc, char) => (acc * 31 + char.charCodeAt(0)) % 10000,
-    0
-  );
-  const generatedEmail =
-    normalizedName.length > 0
-      ? `${baseSlug || "student"}${hashCode}@example.com`
-      : "";
+  const normalizedEmail = email.trim();
 
   const from = (location.state as { from?: Location })?.from;
 
@@ -30,7 +22,12 @@ const Register = () => {
     event.preventDefault();
     try {
       const result = await dispatch(
-        registerUser({ email: generatedEmail, full_name: fullName, password })
+        registerUser({
+          email: normalizedEmail,
+          full_name: fullName,
+          password,
+          role,
+        })
       ).unwrap();
       const fallbackDestination =
         result.role === "admin" ? "/admin/dashboard" : "/dashboard";
@@ -60,12 +57,16 @@ const Register = () => {
             onChange={(event) => setFullName(event.target.value)}
             className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
           />
-          <p className="mt-2 text-xs text-slate-500">
-            We will create an email for you:{" "}
-            <span className="font-medium text-slate-700">
-              {generatedEmail || "name@example.com"}
-            </span>
-          </p>
+        </div>
+        <div>
+          <label className="text-sm font-medium text-slate-700">Email address</label>
+          <input
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
+          />
         </div>
         <div>
           <label className="text-sm font-medium text-slate-700">Password</label>
@@ -77,10 +78,38 @@ const Register = () => {
             className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus-ring"
           />
         </div>
+        <div>
+          <label className="text-sm font-medium text-slate-700">Account type</label>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            {[
+              { value: "student", label: "Student", helper: "Ask and answer questions" },
+              { value: "admin", label: "Admin", helper: "Manage users and content" },
+            ].map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setRole(option.value as "student" | "admin")}
+                className={`rounded-xl border px-4 py-3 text-left text-sm transition focus-ring ${
+                  role === option.value
+                    ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                }`}
+              >
+                <p className="font-semibold">{option.label}</p>
+                <p className="text-xs text-slate-500">{option.helper}</p>
+              </button>
+            ))}
+          </div>
+        </div>
         <button
           type="submit"
           className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-medium text-white focus-ring disabled:cursor-not-allowed disabled:opacity-70"
-          disabled={status === "loading" || normalizedName.length === 0 || password.length < 8}
+          disabled={
+            status === "loading" ||
+            normalizedName.length === 0 ||
+            normalizedEmail.length === 0 ||
+            password.length < 8
+          }
         >
           {status === "loading" ? "Creating account..." : "Create Account"}
         </button>
