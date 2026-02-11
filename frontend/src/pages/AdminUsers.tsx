@@ -1,20 +1,23 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { NavLink } from "react-router-dom";
 
 import Badge from "../components/ui/Badge";
 import EmptyState from "../components/ui/EmptyState";
 import SectionCard from "../components/ui/SectionCard";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import {
+  deleteUserItem,
   fetchAdminUsers,
   selectAdmin,
   updateUserRoleItem,
 } from "../features/admin/adminSlice";
+import { selectAuth } from "../features/auth/authSlice";
 import type { User } from "../types";
 
 const tabs = [
-  { label: "Manage Tags", active: false },
-  { label: "Manage FAQs", active: false },
-  { label: "User Management", active: true },
+  { label: "Manage Tags", to: "/admin/tags" },
+  { label: "Manage FAQs", to: "/admin/faqs" },
+  { label: "User Management", to: "/admin/users" },
 ];
 
 const roleVariant = (role: User["role"]) =>
@@ -24,8 +27,12 @@ const AdminUsers = () => {
   const dispatch = useAppDispatch();
   const { users, usersStatus, usersError, updateRoleStatus, updateRoleError } =
     useAppSelector(selectAdmin);
+  const { userId: currentUserId } = useAppSelector(selectAuth);
+  const { deleteUserStatus, deleteUserError } = useAppSelector(selectAdmin);
   const isLoading = usersStatus === "loading" || usersStatus === "idle";
   const isUpdating = updateRoleStatus === "loading";
+  const isDeleting = deleteUserStatus === "loading";
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(fetchAdminUsers());
@@ -35,6 +42,23 @@ const AdminUsers = () => {
     try {
       await dispatch(updateUserRoleItem({ userId, data: { role } })).unwrap();
       await dispatch(fetchAdminUsers());
+    } catch {
+      // errors handled in state
+    }
+  };
+
+  const handleDelete = async (user: User) => {
+    if (user.id === currentUserId) {
+      return;
+    }
+    if (deleteConfirmId !== user.id) {
+      setDeleteConfirmId(user.id);
+      return;
+    }
+    try {
+      await dispatch(deleteUserItem(user.id)).unwrap();
+      await dispatch(fetchAdminUsers());
+      setDeleteConfirmId(null);
     } catch {
       // errors handled in state
     }
@@ -52,17 +76,19 @@ const AdminUsers = () => {
 
       <div className="flex flex-wrap items-center gap-4 border-b border-slate-200 pb-3 text-sm text-slate-500">
         {tabs.map((tab) => (
-          <button
+          <NavLink
             key={tab.label}
-            type="button"
-            className={`rounded-full px-4 py-2 ${
-              tab.active
-                ? "bg-indigo-50 text-indigo-600"
-                : "text-slate-500 hover:bg-slate-100"
-            } focus-ring`}
+            to={tab.to}
+            className={({ isActive }) =>
+              `rounded-full px-4 py-2 focus-ring ${
+                isActive
+                  ? "bg-indigo-50 text-indigo-600"
+                  : "text-slate-500 hover:bg-slate-100"
+              }`
+            }
           >
             {tab.label}
-          </button>
+          </NavLink>
         ))}
       </div>
 
@@ -139,9 +165,10 @@ const AdminUsers = () => {
                     <button
                       type="button"
                       className="rounded-md text-sm text-rose-500 focus-ring disabled:cursor-not-allowed disabled:opacity-60"
-                      disabled
+                      onClick={() => handleDelete(user)}
+                      disabled={isDeleting || user.id === currentUserId}
                     >
-                      Remove
+                      {deleteConfirmId === user.id ? "Confirm remove" : "Remove"}
                     </button>
                   </div>
                 </div>
@@ -152,6 +179,11 @@ const AdminUsers = () => {
         {updateRoleError ? (
           <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
             {updateRoleError}
+          </p>
+        ) : null}
+        {deleteUserError ? (
+          <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+            {deleteUserError}
           </p>
         ) : null}
       </SectionCard>

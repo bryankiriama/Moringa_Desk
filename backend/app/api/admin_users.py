@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 from backend.app.core.deps import get_current_user
 from backend.app.db.session import get_db
 from backend.app.models.user import User
+from backend.app.repositories.admin_content_repo import delete_user_content
+from backend.app.repositories.user_repo import delete_user
 from backend.app.schemas.user import UserOut, UserRoleUpdate
 
 router = APIRouter(prefix="/admin/users", tags=["admin"])
@@ -55,3 +57,26 @@ def update_user_role_endpoint(
     db.commit()
     db.refresh(user)
     return user
+
+
+@router.delete("/{user_id}")
+def delete_user_endpoint(
+    user_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    _ensure_admin(current_user)
+
+    if current_user.id == user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="cannot delete own account",
+        )
+
+    delete_user_content(db, user_id=user_id)
+    if not delete_user(db, user_id=user_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="user not found"
+        )
+
+    return {"detail": "user removed"}

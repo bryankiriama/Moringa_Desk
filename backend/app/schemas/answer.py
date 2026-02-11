@@ -8,6 +8,10 @@ class AnswerCreate(BaseModel):
     body: str = Field(min_length=20)
 
 
+class AnswerAdminUpdate(BaseModel):
+    body: str = Field(min_length=5)
+
+
 class AnswerOut(BaseModel):
     id: uuid.UUID
     question_id: uuid.UUID

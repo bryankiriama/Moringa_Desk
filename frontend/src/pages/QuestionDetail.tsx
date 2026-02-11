@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import Badge from "../components/ui/Badge";
 import EmptyState from "../components/ui/EmptyState";
@@ -26,12 +26,22 @@ import {
   selectQuestions,
 } from "../features/questions/questionsSlice";
 import { castVoteItem, selectVotes } from "../features/votes/votesSlice";
+import { selectAuth } from "../features/auth/authSlice";
+import {
+  deleteAnswer,
+  deleteQuestion,
+  updateAnswerContent,
+  updateQuestionContent,
+} from "../api/admin";
 import type { QuestionCardData, Tag } from "../types";
 import { formatAbsoluteTime } from "../utils/time";
 
 const QuestionDetail = () => {
   const { questionId } = useParams();
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { role } = useAppSelector(selectAuth);
+  const isAdmin = role === "admin";
   const { detail, detailStatus, detailError } = useAppSelector(selectQuestions);
   const {
     items: answers,
@@ -47,6 +57,14 @@ const QuestionDetail = () => {
   const { isFollowing, status: followStatus, error: followError } =
     useAppSelector(selectFollows);
   const [answerBody, setAnswerBody] = useState("");
+  const [isEditingQuestion, setIsEditingQuestion] = useState(false);
+  const [editQuestionTitle, setEditQuestionTitle] = useState("");
+  const [editQuestionBody, setEditQuestionBody] = useState("");
+  const [adminEditError, setAdminEditError] = useState<string | null>(null);
+  const [savingQuestion, setSavingQuestion] = useState(false);
+  const [editAnswerId, setEditAnswerId] = useState<string | null>(null);
+  const [editAnswerBody, setEditAnswerBody] = useState("");
+  const [savingAnswerId, setSavingAnswerId] = useState<string | null>(null);
   const isVoting = voteStatus === "loading";
   const isFlagging = flagStatus === "loading";
   const isFollowingBusy = followStatus === "loading";
@@ -58,6 +76,13 @@ const QuestionDetail = () => {
       dispatch(fetchFollowStatus(questionId));
     }
   }, [dispatch, questionId]);
+
+  useEffect(() => {
+    if (detail && !isEditingQuestion) {
+      setEditQuestionTitle(detail.title ?? "");
+      setEditQuestionBody(detail.body ?? "");
+    }
+  }, [detail, isEditingQuestion]);
 
   if (!questionId) {
     return <EmptyState title="Question not found" description="Missing question id." />;
@@ -233,6 +258,112 @@ const QuestionDetail = () => {
     }
   };
 
+  const handleStartEditQuestion = () => {
+    if (!detail) {
+      return;
+    }
+    setAdminEditError(null);
+    setIsEditingQuestion(true);
+    setEditQuestionTitle(detail.title ?? "");
+    setEditQuestionBody(detail.body ?? "");
+  };
+
+  const handleCancelEditQuestion = () => {
+    setIsEditingQuestion(false);
+    setAdminEditError(null);
+    setEditQuestionTitle(detail?.title ?? "");
+    setEditQuestionBody(detail?.body ?? "");
+  };
+
+  const handleSaveQuestion = async () => {
+    if (!questionId) {
+      return;
+    }
+    setAdminEditError(null);
+    setSavingQuestion(true);
+    try {
+      await updateQuestionContent(questionId, {
+        title: editQuestionTitle.trim(),
+        body: editQuestionBody.trim(),
+      });
+      await dispatch(fetchQuestionDetail(questionId));
+      setIsEditingQuestion(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to update question.";
+      setAdminEditError(message);
+    } finally {
+      setSavingQuestion(false);
+    }
+  };
+
+  const handleDeleteQuestion = async () => {
+    if (!questionId) {
+      return;
+    }
+    const confirmed = window.confirm("Delete this question and all related answers?");
+    if (!confirmed) {
+      return;
+    }
+    setAdminEditError(null);
+    try {
+      await deleteQuestion(questionId);
+      navigate("/questions");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to delete question.";
+      setAdminEditError(message);
+    }
+  };
+
+  const handleStartEditAnswer = (answerId: string, body: string) => {
+    setAdminEditError(null);
+    setEditAnswerId(answerId);
+    setEditAnswerBody(body);
+  };
+
+  const handleCancelEditAnswer = () => {
+    setEditAnswerId(null);
+    setEditAnswerBody("");
+    setAdminEditError(null);
+  };
+
+  const handleSaveAnswer = async (answerId: string) => {
+    if (!questionId) {
+      return;
+    }
+    setAdminEditError(null);
+    setSavingAnswerId(answerId);
+    try {
+      await updateAnswerContent(answerId, { body: editAnswerBody.trim() });
+      await dispatch(fetchAnswers(questionId));
+      setEditAnswerId(null);
+      setEditAnswerBody("");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to update answer.";
+      setAdminEditError(message);
+    } finally {
+      setSavingAnswerId(null);
+    }
+  };
+
+  const handleDeleteAnswer = async (answerId: string) => {
+    if (!questionId) {
+      return;
+    }
+    const confirmed = window.confirm("Delete this answer?");
+    if (!confirmed) {
+      return;
+    }
+    setAdminEditError(null);
+    try {
+      await deleteAnswer(answerId);
+      await dispatch(fetchAnswers(questionId));
+      await dispatch(fetchQuestionDetail(questionId));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to delete answer.";
+      setAdminEditError(message);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <SectionCard
@@ -241,15 +372,80 @@ const QuestionDetail = () => {
       >
         <div className="space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-900">
-                {question.question.title}
-              </h1>
-              <p className="mt-2 text-sm text-slate-500">{question.question.body}</p>
+            <div className="flex-1">
+              {isEditingQuestion ? (
+                <div className="space-y-3">
+                  <input
+                    value={editQuestionTitle}
+                    onChange={(event) => setEditQuestionTitle(event.target.value)}
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus-ring"
+                    placeholder="Question title"
+                  />
+                  <textarea
+                    rows={4}
+                    value={editQuestionBody}
+                    onChange={(event) => setEditQuestionBody(event.target.value)}
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus-ring"
+                    placeholder="Question details"
+                  />
+                </div>
+              ) : (
+                <>
+                  <h1 className="text-2xl font-semibold text-slate-900">
+                    {question.question.title}
+                  </h1>
+                  <p className="mt-2 text-sm text-slate-500">
+                    {question.question.body}
+                  </p>
+                </>
+              )}
             </div>
-            {question.question.accepted_answer_id ? (
-              <Badge label="Answered" variant="success" />
-            ) : null}
+            <div className="flex items-center gap-2">
+              {question.question.accepted_answer_id ? (
+                <Badge label="Answered" variant="success" />
+              ) : null}
+              {isAdmin ? (
+                <div className="flex items-center gap-2">
+                  {isEditingQuestion ? (
+                    <>
+                      <button
+                        type="button"
+                        className="rounded-full bg-indigo-600 px-3 py-1 text-xs font-medium text-white focus-ring disabled:opacity-60"
+                        onClick={handleSaveQuestion}
+                        disabled={savingQuestion || editQuestionTitle.trim().length === 0}
+                      >
+                        {savingQuestion ? "Saving..." : "Save"}
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring"
+                        onClick={handleCancelEditQuestion}
+                        disabled={savingQuestion}
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring"
+                        onClick={handleStartEditQuestion}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-full border border-rose-200 px-3 py-1 text-xs font-medium text-rose-600 focus-ring"
+                        onClick={handleDeleteQuestion}
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
+                </div>
+              ) : null}
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -319,9 +515,17 @@ const QuestionDetail = () => {
             </p>
           ) : null}
 
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-            <p>{detail.body}</p>
-          </div>
+          {adminEditError ? (
+            <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+              {adminEditError}
+            </p>
+          ) : null}
+
+          {!isEditingQuestion ? (
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+              <p>{detail.body}</p>
+            </div>
+          ) : null}
         </div>
       </SectionCard>
 
@@ -362,9 +566,62 @@ const QuestionDetail = () => {
                         {acceptStatus === "loading" ? "Accepting..." : "Accept answer"}
                       </button>
                     )}
+                    {isAdmin ? (
+                      <div className="flex items-center gap-2">
+                        {editAnswerId === answer.id ? (
+                          <>
+                            <button
+                              type="button"
+                              className="rounded-full bg-indigo-600 px-3 py-1 text-xs font-medium text-white focus-ring disabled:opacity-60"
+                              onClick={() => handleSaveAnswer(answer.id)}
+                              disabled={
+                                savingAnswerId === answer.id ||
+                                editAnswerBody.trim().length === 0
+                              }
+                            >
+                              {savingAnswerId === answer.id ? "Saving..." : "Save"}
+                            </button>
+                            <button
+                              type="button"
+                              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring"
+                              onClick={handleCancelEditAnswer}
+                              disabled={savingAnswerId === answer.id}
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 focus-ring"
+                              onClick={() => handleStartEditAnswer(answer.id, answer.body)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              className="rounded-full border border-rose-200 px-3 py-1 text-xs font-medium text-rose-600 focus-ring"
+                              onClick={() => handleDeleteAnswer(answer.id)}
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    ) : null}
                   </div>
                 </div>
-                <p className="mt-3 text-sm text-slate-600">{answer.body}</p>
+                {editAnswerId === answer.id ? (
+                  <textarea
+                    rows={3}
+                    value={editAnswerBody}
+                    onChange={(event) => setEditAnswerBody(event.target.value)}
+                    className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus-ring"
+                  />
+                ) : (
+                  <p className="mt-3 text-sm text-slate-600">{answer.body}</p>
+                )}
                 <div className="mt-4 flex flex-wrap gap-2">
                   <button
                     type="button"

@@ -11,6 +11,13 @@ class QuestionCreate(BaseModel):
     stage: str
 
 
+class QuestionAdminUpdate(BaseModel):
+    title: str | None = Field(default=None, min_length=10)
+    body: str | None = Field(default=None, min_length=20)
+    category: str | None = None
+    stage: str | None = None
+
+
 class QuestionOut(BaseModel):
     id: uuid.UUID
     author_id: uuid.UUID

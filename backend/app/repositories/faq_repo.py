@@ -5,9 +5,11 @@ from backend.app.models.faq import FAQ
 
 
 def create_faq(
-    session: Session, *, question: str, answer: str, created_by
+    session: Session, *, question: str, answer: str, category: str | None, created_by
 ) -> FAQ:
-    faq = FAQ(question=question, answer=answer, created_by=created_by)
+    faq = FAQ(
+        question=question, answer=answer, category=category, created_by=created_by
+    )
     session.add(faq)
     session.commit()
     session.refresh(faq)
@@ -20,7 +22,12 @@ def list_faqs(session: Session) -> list[FAQ]:
 
 
 def update_faq(
-    session: Session, *, faq_id, question: str | None, answer: str | None
+    session: Session,
+    *,
+    faq_id,
+    question: str | None,
+    answer: str | None,
+    category: str | None,
 ) -> FAQ | None:
     faq = session.get(FAQ, faq_id)
     if faq is None:
@@ -29,6 +36,8 @@ def update_faq(
         faq.question = question
     if answer is not None:
         faq.answer = answer
+    if category is not None:
+        faq.category = category
     session.add(faq)
     session.commit()
     session.refresh(faq)

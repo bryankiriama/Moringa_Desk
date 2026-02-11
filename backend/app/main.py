@@ -32,6 +32,12 @@ if "question_views" in inspector.get_table_names():
         with engine.begin() as conn:
             conn.execute(text("ALTER TABLE question_views ADD COLUMN viewer_session TEXT"))
 
+if "faqs" in inspector.get_table_names():
+    columns = {col["name"] for col in inspector.get_columns("faqs")}
+    if "category" not in columns:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE faqs ADD COLUMN category TEXT"))
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[

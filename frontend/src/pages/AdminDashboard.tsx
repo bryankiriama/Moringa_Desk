@@ -7,6 +7,10 @@ import SectionCard from "../components/ui/SectionCard";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { getQuestionDetail } from "../api/questions";
 import {
+  fetchAdminUsers,
+  selectAdmin,
+} from "../features/admin/adminSlice";
+import {
   fetchQuestions,
   selectQuestions,
 } from "../features/questions/questionsSlice";
@@ -72,6 +76,7 @@ const AdminDashboard = () => {
   const dispatch = useAppDispatch();
   const { items: questions, status: questionsStatus } =
     useAppSelector(selectQuestions);
+  const { users, usersStatus, usersError } = useAppSelector(selectAdmin);
   const [statsStatus, setStatsStatus] = useState<
     "idle" | "loading" | "succeeded" | "failed"
   >("idle");
@@ -86,6 +91,12 @@ const AdminDashboard = () => {
       dispatch(fetchQuestions(undefined));
     }
   }, [dispatch, questionsStatus]);
+
+  useEffect(() => {
+    if (usersStatus === "idle") {
+      dispatch(fetchAdminUsers());
+    }
+  }, [dispatch, usersStatus]);
 
   useEffect(() => {
     let mounted = true;
@@ -186,6 +197,46 @@ const AdminDashboard = () => {
       .sort((a, b) => b.answers - a.answers || b.votes - a.votes)
       .slice(0, 5);
   }, [questionDetails]);
+
+  const studentActivity = useMemo(() => {
+    if (users.length === 0) {
+      return [];
+    }
+    const questionMap = new Map<string, number>();
+    const answerMap = new Map<string, number>();
+    const voteMap = new Map<string, number>();
+
+    questions.forEach((question) => {
+      questionMap.set(question.author_id, (questionMap.get(question.author_id) ?? 0) + 1);
+      voteMap.set(
+        question.author_id,
+        (voteMap.get(question.author_id) ?? 0) + (question.vote_score ?? 0)
+      );
+    });
+
+    questionDetails.forEach((item) => {
+      item.answers.forEach((answer) => {
+        answerMap.set(answer.author_id, (answerMap.get(answer.author_id) ?? 0) + 1);
+        voteMap.set(
+          answer.author_id,
+          (voteMap.get(answer.author_id) ?? 0) + (answer.vote_score ?? 0)
+        );
+      });
+    });
+
+    return users
+      .map((user) => ({
+        id: user.id,
+        name: user.full_name,
+        email: user.email,
+        role: user.role,
+        questions: questionMap.get(user.id) ?? 0,
+        answers: answerMap.get(user.id) ?? 0,
+        votes: voteMap.get(user.id) ?? 0,
+      }))
+      .filter((user) => user.role === "student")
+      .sort((a, b) => b.questions + b.answers - (a.questions + a.answers));
+  }, [users, questions, questionDetails]);
 
   const metrics: MetricCardData[] = [
     {
@@ -346,6 +397,47 @@ const AdminDashboard = () => {
           )}
         </SectionCard>
       </section>
+
+      <SectionCard
+        title="Student Activity"
+        subtitle="All students with questions, answers, and votes"
+      >
+        {usersStatus === "loading" || usersStatus === "idle" ? (
+          <EmptyState title="Loading students..." description="Fetching user activity." />
+        ) : usersError ? (
+          <EmptyState title="Unable to load students" description={usersError} />
+        ) : studentActivity.length === 0 ? (
+          <EmptyState
+            title="No student activity yet"
+            description="Once students post questions and answers, activity will appear here."
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <div className="min-w-[640px] space-y-3">
+              <div className="grid grid-cols-[2fr,1fr,1fr,1fr] gap-4 text-xs uppercase tracking-wide text-slate-400">
+                <span>Student</span>
+                <span>Questions</span>
+                <span>Answers</span>
+                <span>Votes</span>
+              </div>
+              {studentActivity.map((student) => (
+                <div
+                  key={student.id}
+                  className="grid grid-cols-[2fr,1fr,1fr,1fr] items-center gap-4 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm"
+                >
+                  <div>
+                    <p className="font-semibold text-slate-900">{student.name}</p>
+                    <p className="text-xs text-slate-500">{student.email}</p>
+                  </div>
+                  <span className="text-slate-700">{student.questions}</span>
+                  <span className="text-slate-700">{student.answers}</span>
+                  <span className="text-slate-700">{student.votes}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </SectionCard>
     </div>
   );
 };

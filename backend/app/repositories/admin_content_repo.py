@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from backend.app.models.answer import Answer
 from backend.app.models.flag import Flag
 from backend.app.models.follow import Follow
+from backend.app.models.notification import Notification
 from backend.app.models.question import Question
 from backend.app.models.question_tag import QuestionTag
 from backend.app.models.question_view import QuestionView
@@ -37,6 +38,29 @@ def delete_answer(session: Session, *, answer_id) -> bool:
     session.delete(answer)
     session.commit()
     return True
+
+
+def delete_user_content(session: Session, *, user_id) -> None:
+    answer_ids = list(
+        session.scalars(select(Answer.id).where(Answer.author_id == user_id)).all()
+    )
+    for answer_id in answer_ids:
+        delete_answer(session, answer_id=answer_id)
+
+    question_ids = list(
+        session.scalars(select(Question.id).where(Question.author_id == user_id)).all()
+    )
+    for question_id in question_ids:
+        delete_question(session, question_id=question_id)
+
+    session.execute(delete(Flag).where(Flag.user_id == user_id))
+    session.execute(delete(Vote).where(Vote.user_id == user_id))
+    session.execute(delete(Follow).where(Follow.user_id == user_id))
+    session.execute(delete(QuestionView).where(QuestionView.viewer_id == user_id))
+    session.execute(
+        delete(Notification).where(Notification.user_id == user_id)
+    )
+    session.commit()
 
 
 def delete_question(session: Session, *, question_id) -> bool:
@@ -87,3 +111,45 @@ def delete_question(session: Session, *, question_id) -> bool:
     session.delete(question)
     session.commit()
     return True
+
+
+def update_question_content(
+    session: Session,
+    *,
+    question_id,
+    title: str | None,
+    body: str | None,
+    category: str | None,
+    stage: str | None,
+) -> Question | None:
+    question = session.get(Question, question_id)
+    if question is None:
+        return None
+    if title is not None:
+        question.title = title
+    if body is not None:
+        question.body = body
+    if category is not None:
+        question.category = category
+    if stage is not None:
+        question.stage = stage
+    session.add(question)
+    session.commit()
+    session.refresh(question)
+    return question
+
+
+def update_answer_content(
+    session: Session,
+    *,
+    answer_id,
+    body: str,
+) -> Answer | None:
+    answer = session.get(Answer, answer_id)
+    if answer is None:
+        return None
+    answer.body = body
+    session.add(answer)
+    session.commit()
+    session.refresh(answer)
+    return answer

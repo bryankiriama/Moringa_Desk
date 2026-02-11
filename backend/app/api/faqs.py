@@ -30,6 +30,7 @@ def create_faq_endpoint(
         db,
         question=payload.question,
         answer=payload.answer,
+        category=payload.category,
         created_by=current_user.id,
     )
 
@@ -51,6 +52,7 @@ def update_faq_endpoint(
         faq_id=faq_id,
         question=payload.question,
         answer=payload.answer,
+        category=payload.category,
     )
     if faq is None:
         raise HTTPException(

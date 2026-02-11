@@ -3,6 +3,7 @@ import axios from "axios";
 export const AUTH_TOKEN_KEY = "moringa_auth_token";
 export const AUTH_ROLE_KEY = "moringa_user_role";
 export const AUTH_NAME_KEY = "moringa_user_name";
+export const AUTH_USER_ID_KEY = "moringa_user_id";
 
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? "",

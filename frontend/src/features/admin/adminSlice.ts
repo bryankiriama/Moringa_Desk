@@ -7,6 +7,7 @@ import {
   createFaq,
   createTag,
   deleteFaq,
+  deleteUser,
   listFaqs,
   listTags,
   listUsers,
@@ -26,6 +27,8 @@ type AdminState = {
   usersError: string | null;
   updateRoleStatus: LoadStatus;
   updateRoleError: string | null;
+  deleteUserStatus: LoadStatus;
+  deleteUserError: string | null;
   tags: Tag[];
   tagsStatus: LoadStatus;
   tagsError: string | null;
@@ -48,6 +51,8 @@ const initialState: AdminState = {
   usersError: null,
   updateRoleStatus: "idle",
   updateRoleError: null,
+  deleteUserStatus: "idle",
+  deleteUserError: null,
   tags: [],
   tagsStatus: "idle",
   tagsError: null,
@@ -96,6 +101,18 @@ export const updateUserRoleItem = createAsyncThunk(
   ) => {
     try {
       return await updateUserRole(payload.userId, payload.data);
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  }
+);
+
+export const deleteUserItem = createAsyncThunk(
+  "admin/users/delete",
+  async (userId: string, { rejectWithValue }) => {
+    try {
+      await deleteUser(userId);
+      return userId;
     } catch (error) {
       return rejectWithValue(getErrorMessage(error));
     }
@@ -204,6 +221,19 @@ const adminSlice = createSlice({
         state.updateRoleStatus = "failed";
         state.updateRoleError =
           (action.payload as string) ?? "Failed to update role";
+      })
+      .addCase(deleteUserItem.pending, (state) => {
+        state.deleteUserStatus = "loading";
+        state.deleteUserError = null;
+      })
+      .addCase(deleteUserItem.fulfilled, (state, action) => {
+        state.deleteUserStatus = "succeeded";
+        state.users = state.users.filter((user) => user.id !== action.payload);
+      })
+      .addCase(deleteUserItem.rejected, (state, action) => {
+        state.deleteUserStatus = "failed";
+        state.deleteUserError =
+          (action.payload as string) ?? "Failed to delete user";
       })
       .addCase(fetchAdminTags.pending, (state) => {
         state.tagsStatus = "loading";

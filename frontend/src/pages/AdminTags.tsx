@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { NavLink } from "react-router-dom";
 
 import Badge from "../components/ui/Badge";
 import EmptyState from "../components/ui/EmptyState";
@@ -12,9 +13,9 @@ import {
 } from "../features/admin/adminSlice";
 
 const tabs = [
-  { label: "Manage Tags", active: true },
-  { label: "Manage FAQs", active: false },
-  { label: "User Management", active: false },
+  { label: "Manage Tags", to: "/admin/tags" },
+  { label: "Manage FAQs", to: "/admin/faqs" },
+  { label: "User Management", to: "/admin/users" },
 ];
 
 const AdminTags = () => {
@@ -59,17 +60,19 @@ const AdminTags = () => {
 
       <div className="flex flex-wrap items-center gap-4 border-b border-slate-200 pb-3 text-sm text-slate-500">
         {tabs.map((tab) => (
-          <button
+          <NavLink
             key={tab.label}
-            type="button"
-            className={`rounded-full px-4 py-2 ${
-              tab.active
-                ? "bg-indigo-50 text-indigo-600"
-                : "text-slate-500 hover:bg-slate-100"
-            } focus-ring`}
+            to={tab.to}
+            className={({ isActive }) =>
+              `rounded-full px-4 py-2 focus-ring ${
+                isActive
+                  ? "bg-indigo-50 text-indigo-600"
+                  : "text-slate-500 hover:bg-slate-100"
+              }`
+            }
           >
             {tab.label}
-          </button>
+          </NavLink>
         ))}
       </div>
 

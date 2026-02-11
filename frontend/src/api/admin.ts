@@ -12,11 +12,13 @@ export type TagCreateRequest = {
 export type FAQCreateRequest = {
   question: string;
   answer: string;
+  category?: string | null;
 };
 
 export type FAQUpdateRequest = {
   question?: string;
   answer?: string;
+  category?: string | null;
 };
 
 export const listUsers = async (): Promise<User[]> => {
@@ -30,6 +32,10 @@ export const updateUserRole = async (
 ): Promise<User> => {
   const response = await apiClient.patch<User>(`/admin/users/${userId}`, payload);
   return response.data;
+};
+
+export const deleteUser = async (userId: string): Promise<void> => {
+  await apiClient.delete(`/admin/users/${userId}`);
 };
 
 export const listTags = async (): Promise<Tag[]> => {
@@ -79,4 +85,31 @@ export const deleteQuestion = async (questionId: string): Promise<void> => {
 
 export const deleteAnswer = async (answerId: string): Promise<void> => {
   await apiClient.delete(`/admin/content/answers/${answerId}`);
+};
+
+export type QuestionAdminUpdateRequest = {
+  title?: string;
+  body?: string;
+  category?: string;
+  stage?: string;
+};
+
+export type AnswerAdminUpdateRequest = {
+  body: string;
+};
+
+export const updateQuestionContent = async (
+  questionId: string,
+  payload: QuestionAdminUpdateRequest
+) => {
+  const response = await apiClient.patch(`/admin/content/questions/${questionId}`, payload);
+  return response.data;
+};
+
+export const updateAnswerContent = async (
+  answerId: string,
+  payload: AnswerAdminUpdateRequest
+) => {
+  const response = await apiClient.patch(`/admin/content/answers/${answerId}`, payload);
+  return response.data;
 };
