@@ -1,6 +1,7 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from backend.app.core.deps import get_current_user
@@ -17,11 +18,26 @@ from backend.app.services.answer_service import accept_answer
 router = APIRouter(prefix="/questions/{question_id}/answers", tags=["answers"])
 
 
-def _answer_out(db: Session, answer) -> AnswerOut:
+def _author_lookup(db: Session, author_ids: list) -> dict:
+    if not author_ids:
+        return {}
+    rows = db.execute(
+        select(User.id, User.full_name).where(User.id.in_(author_ids))
+    ).all()
+    return {row[0]: row[1] for row in rows}
+
+
+def _answer_out(
+    db: Session, answer, author_map: dict | None = None
+) -> AnswerOut:
+    author_name = None
+    if author_map is not None:
+        author_name = author_map.get(answer.author_id)
     return AnswerOut(
         id=answer.id,
         question_id=answer.question_id,
         author_id=answer.author_id,
+        author_name=author_name,
         body=answer.body,
         is_accepted=answer.is_accepted,
         created_at=answer.created_at,
@@ -77,7 +93,7 @@ def create_answer_endpoint(
             },
         )
 
-    return _answer_out(db, answer)
+    return _answer_out(db, answer, {current_user.id: current_user.full_name})
 
 
 @router.get("", response_model=list[AnswerOut])
@@ -85,7 +101,9 @@ def list_answers_endpoint(
     question_id: uuid.UUID,
     db: Session = Depends(get_db),
 ) -> list[AnswerOut]:
-    return [_answer_out(db, a) for a in list_answers_for_question(db, question_id=question_id)]
+    answers = list_answers_for_question(db, question_id=question_id)
+    author_map = _author_lookup(db, [a.author_id for a in answers])
+    return [_answer_out(db, a, author_map) for a in answers]
 
 
 @router.post("/{answer_id}/accept")

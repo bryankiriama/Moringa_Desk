@@ -6,11 +6,14 @@ from backend.app.repositories.user_repo import create_user, get_user_by_email
 
 
 def register_user(
-    session: Session, *, email: str, full_name: str, password: str
+    session: Session, *, email: str, full_name: str, password: str, role: str
 ) -> User:
     existing = get_user_by_email(session, email)
     if existing is not None:
         raise ValueError("email already registered")
+
+    if role not in {"student", "admin"}:
+        raise ValueError("invalid role")
 
     password_hash = hash_password(password)
     return create_user(
@@ -18,6 +21,7 @@ def register_user(
         email=email,
         full_name=full_name,
         password_hash=password_hash,
+        role=role,
     )
 
 

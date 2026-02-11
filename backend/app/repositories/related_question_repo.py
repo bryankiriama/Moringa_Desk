@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from backend.app.models.question import Question
+from backend.app.models.question_tag import QuestionTag
 from backend.app.models.related_question import RelatedQuestion
 
 
@@ -55,5 +56,26 @@ def list_related_questions(session: Session, *, question_id) -> list[Question]:
         )
         .where(RelatedQuestion.question_id == question_id)
         .order_by(Question.created_at.desc())
+    )
+    return list(session.scalars(stmt).all())
+
+
+def list_related_questions_by_tags(
+    session: Session, *, question_id, limit: int = 6
+) -> list[Question]:
+    tag_ids_subquery = (
+        select(QuestionTag.tag_id)
+        .where(QuestionTag.question_id == question_id)
+        .subquery()
+    )
+
+    stmt = (
+        select(Question)
+        .join(QuestionTag, QuestionTag.question_id == Question.id)
+        .where(QuestionTag.tag_id.in_(select(tag_ids_subquery.c.tag_id)))
+        .where(Question.id != question_id)
+        .distinct()
+        .order_by(Question.created_at.desc())
+        .limit(limit)
     )
     return list(session.scalars(stmt).all())

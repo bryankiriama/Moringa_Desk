@@ -1,6 +1,7 @@
 export interface Question {
   id: string;
   author_id: string;
+  author_name?: string | null;
   title: string;
   body: string;
   category: string;
@@ -8,6 +9,8 @@ export interface Question {
   accepted_answer_id: string | null;
   created_at: string;
   updated_at: string;
+  answers_count?: number;
+  views_count?: number;
   vote_score: number;
 }
 

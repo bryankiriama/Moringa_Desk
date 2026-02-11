@@ -31,3 +31,12 @@ def create_user(
     session.commit()
     session.refresh(user)
     return user
+
+
+def delete_user(session: Session, *, user_id) -> bool:
+    user = session.get(User, user_id)
+    if user is None:
+        return False
+    session.delete(user)
+    session.commit()
+    return True

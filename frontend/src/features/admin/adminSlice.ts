@@ -6,11 +6,15 @@ import type { FAQ, Tag, User } from "../../types";
 import {
   createFaq,
   createTag,
+  deleteFaq,
+  deleteUser,
   listFaqs,
   listTags,
   listUsers,
+  updateFaq,
   updateUserRole,
   type FAQCreateRequest,
+  type FAQUpdateRequest,
   type TagCreateRequest,
   type UserRoleUpdateRequest,
 } from "../../api/admin";
@@ -23,6 +27,8 @@ type AdminState = {
   usersError: string | null;
   updateRoleStatus: LoadStatus;
   updateRoleError: string | null;
+  deleteUserStatus: LoadStatus;
+  deleteUserError: string | null;
   tags: Tag[];
   tagsStatus: LoadStatus;
   tagsError: string | null;
@@ -33,6 +39,10 @@ type AdminState = {
   faqsError: string | null;
   createFaqStatus: LoadStatus;
   createFaqError: string | null;
+  updateFaqStatus: LoadStatus;
+  updateFaqError: string | null;
+  deleteFaqStatus: LoadStatus;
+  deleteFaqError: string | null;
 };
 
 const initialState: AdminState = {
@@ -41,6 +51,8 @@ const initialState: AdminState = {
   usersError: null,
   updateRoleStatus: "idle",
   updateRoleError: null,
+  deleteUserStatus: "idle",
+  deleteUserError: null,
   tags: [],
   tagsStatus: "idle",
   tagsError: null,
@@ -51,6 +63,10 @@ const initialState: AdminState = {
   faqsError: null,
   createFaqStatus: "idle",
   createFaqError: null,
+  updateFaqStatus: "idle",
+  updateFaqError: null,
+  deleteFaqStatus: "idle",
+  deleteFaqError: null,
 };
 
 const getErrorMessage = (error: unknown) => {
@@ -85,6 +101,18 @@ export const updateUserRoleItem = createAsyncThunk(
   ) => {
     try {
       return await updateUserRole(payload.userId, payload.data);
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  }
+);
+
+export const deleteUserItem = createAsyncThunk(
+  "admin/users/delete",
+  async (userId: string, { rejectWithValue }) => {
+    try {
+      await deleteUser(userId);
+      return userId;
     } catch (error) {
       return rejectWithValue(getErrorMessage(error));
     }
@@ -135,6 +163,32 @@ export const createFaqItem = createAsyncThunk(
   }
 );
 
+export const updateFaqItem = createAsyncThunk(
+  "admin/faqs/update",
+  async (
+    payload: { faqId: string; data: FAQUpdateRequest },
+    { rejectWithValue }
+  ) => {
+    try {
+      return await updateFaq(payload.faqId, payload.data);
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  }
+);
+
+export const deleteFaqItem = createAsyncThunk(
+  "admin/faqs/delete",
+  async (faqId: string, { rejectWithValue }) => {
+    try {
+      await deleteFaq(faqId);
+      return faqId;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  }
+);
+
 const adminSlice = createSlice({
   name: "admin",
   initialState,
@@ -167,6 +221,19 @@ const adminSlice = createSlice({
         state.updateRoleStatus = "failed";
         state.updateRoleError =
           (action.payload as string) ?? "Failed to update role";
+      })
+      .addCase(deleteUserItem.pending, (state) => {
+        state.deleteUserStatus = "loading";
+        state.deleteUserError = null;
+      })
+      .addCase(deleteUserItem.fulfilled, (state, action) => {
+        state.deleteUserStatus = "succeeded";
+        state.users = state.users.filter((user) => user.id !== action.payload);
+      })
+      .addCase(deleteUserItem.rejected, (state, action) => {
+        state.deleteUserStatus = "failed";
+        state.deleteUserError =
+          (action.payload as string) ?? "Failed to delete user";
       })
       .addCase(fetchAdminTags.pending, (state) => {
         state.tagsStatus = "loading";
@@ -217,6 +284,34 @@ const adminSlice = createSlice({
         state.createFaqStatus = "failed";
         state.createFaqError =
           (action.payload as string) ?? "Failed to create FAQ";
+      })
+      .addCase(updateFaqItem.pending, (state) => {
+        state.updateFaqStatus = "loading";
+        state.updateFaqError = null;
+      })
+      .addCase(updateFaqItem.fulfilled, (state, action) => {
+        state.updateFaqStatus = "succeeded";
+        state.faqs = state.faqs.map((faq) =>
+          faq.id === action.payload.id ? action.payload : faq
+        );
+      })
+      .addCase(updateFaqItem.rejected, (state, action) => {
+        state.updateFaqStatus = "failed";
+        state.updateFaqError =
+          (action.payload as string) ?? "Failed to update FAQ";
+      })
+      .addCase(deleteFaqItem.pending, (state) => {
+        state.deleteFaqStatus = "loading";
+        state.deleteFaqError = null;
+      })
+      .addCase(deleteFaqItem.fulfilled, (state, action) => {
+        state.deleteFaqStatus = "succeeded";
+        state.faqs = state.faqs.filter((faq) => faq.id !== action.payload);
+      })
+      .addCase(deleteFaqItem.rejected, (state, action) => {
+        state.deleteFaqStatus = "failed";
+        state.deleteFaqError =
+          (action.payload as string) ?? "Failed to delete FAQ";
       });
   },
 });

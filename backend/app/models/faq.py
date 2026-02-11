@@ -15,6 +15,7 @@ class FAQ(Base):
     )
     question: Mapped[str] = mapped_column(Text)
     answer: Mapped[str] = mapped_column(Text)
+    category: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_by: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("users.id"), nullable=True
     )

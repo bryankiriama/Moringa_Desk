@@ -7,6 +7,7 @@ import AdminDashboard from "../pages/AdminDashboard";
 import AdminFaqs from "../pages/AdminFaqs";
 import AdminTags from "../pages/AdminTags";
 import AdminUsers from "../pages/AdminUsers";
+import AdminFlags from "../pages/AdminFlags";
 import AskQuestion from "../pages/AskQuestion";
 import Dashboard from "../pages/Dashboard";
 import Login from "../pages/Login";
@@ -14,7 +15,10 @@ import Notifications from "../pages/Notifications";
 import QuestionDetail from "../pages/QuestionDetail";
 import QuestionsList from "../pages/QuestionsList";
 import Register from "../pages/Register";
+import ForgotPassword from "../pages/ForgotPassword";
+import ResetPassword from "../pages/ResetPassword";
 import Trending from "../pages/Trending";
+import MyActivity from "../pages/MyActivity";
 import RequireAuth from "./RequireAuth";
 
 const AppRouter = () => {
@@ -25,6 +29,8 @@ const AppRouter = () => {
           <Route index element={<Navigate to="/login" replace />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
+          <Route path="reset-password" element={<ResetPassword />} />
         </Route>
 
         <Route element={<RequireAuth />}>
@@ -35,6 +41,7 @@ const AppRouter = () => {
             <Route path="/questions/:questionId" element={<QuestionDetail />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/trending" element={<Trending />} />
+            <Route path="/me" element={<MyActivity />} />
           </Route>
 
           <Route path="/admin" element={<AdminLayout />}>
@@ -42,6 +49,7 @@ const AppRouter = () => {
             <Route path="users" element={<AdminUsers />} />
             <Route path="tags" element={<AdminTags />} />
             <Route path="faqs" element={<AdminFaqs />} />
+            <Route path="flags" element={<AdminFlags />} />
           </Route>
         </Route>
       </Routes>

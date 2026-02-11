@@ -21,7 +21,7 @@ const SectionCard = ({
 }: SectionCardProps) => {
   return (
     <section
-      className={`rounded-2xl border border-slate-200 bg-white shadow-sm ${
+      className={`rounded-2xl border border-slate-200 bg-white/90 shadow-sm transition-all hover:shadow-md card-shadow ${
         className ?? ""
       }`}
     >

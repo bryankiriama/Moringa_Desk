@@ -7,6 +7,7 @@ from backend.app.models.user import User
 from backend.app.repositories.answer_repo import list_answers_by_author
 from backend.app.repositories.question_repo import list_questions_by_author
 from backend.app.schemas.me import MyAnswerOut, MyQuestionOut
+from backend.app.schemas.user import UserOut
 
 router = APIRouter(prefix="/me", tags=["me"])
 
@@ -25,3 +26,10 @@ def my_answers_endpoint(
     current_user: User = Depends(get_current_user),
 ) -> list[MyAnswerOut]:
     return list_answers_by_author(db, author_id=current_user.id)
+
+
+@router.get("/profile", response_model=UserOut)
+def my_profile_endpoint(
+    current_user: User = Depends(get_current_user),
+) -> UserOut:
+    return current_user

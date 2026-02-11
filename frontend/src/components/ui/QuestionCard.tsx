@@ -25,7 +25,7 @@ const QuestionCard = ({
 }: QuestionCardProps) => {
   return (
     <div
-      className={`block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-slate-300 focus-within:ring-2 focus-within:ring-indigo-200 focus-within:ring-offset-2 focus-within:ring-offset-white ${
+      className={`block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md focus-within:ring-2 focus-within:ring-indigo-200 focus-within:ring-offset-2 focus-within:ring-offset-white card-shadow ${
         className ?? ""
       }`}
     >
@@ -72,7 +72,7 @@ const QuestionCard = ({
         ))}
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-500">
+      <div className="mt-4 flex flex-col gap-3 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <span>{stats.answers} answers</span>
           <span>{stats.views} views</span>
@@ -80,7 +80,7 @@ const QuestionCard = ({
             <span>{stats.votes} votes</span>
           ) : null}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span>Asked by {meta.author}</span>
           <span>•</span>
           <span>{meta.time}</span>

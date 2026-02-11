@@ -20,9 +20,10 @@ const Login = () => {
       const result = await dispatch(loginUser({ email, password })).unwrap();
       const fallbackDestination =
         result.role === "admin" ? "/admin/dashboard" : "/dashboard";
-      const destination = from
-        ? `${from.pathname}${from.search}${from.hash}`
-        : fallbackDestination;
+      const destination =
+        from && !(result.role === "admin" && !from.pathname.startsWith("/admin"))
+          ? `${from.pathname}${from.search}${from.hash}`
+          : fallbackDestination;
       navigate(destination, { replace: true });
     } catch {
       // Errors are handled in state
@@ -66,6 +67,14 @@ const Login = () => {
             onChange={(event) => setPassword(event.target.value)}
             className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus-ring"
           />
+          <div className="mt-2 flex justify-end">
+            <Link
+              to="/forgot-password"
+              className="rounded-md text-xs font-medium text-slate-600 hover:text-slate-900 focus-ring"
+            >
+              Forgot password?
+            </Link>
+          </div>
         </div>
         <button
           type="submit"

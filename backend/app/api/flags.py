@@ -6,7 +6,12 @@ from backend.app.db.session import get_db
 from backend.app.models.answer import Answer
 from backend.app.models.question import Question
 from backend.app.models.user import User
-from backend.app.repositories.flag_repo import create_flag, get_flag, list_flags
+from backend.app.repositories.flag_repo import (
+    create_flag,
+    delete_flag,
+    get_flag,
+    list_flags,
+)
 from backend.app.schemas.flag import FlagCreate, FlagOut
 
 router = APIRouter(prefix="/flags", tags=["flags"])
@@ -67,3 +72,22 @@ def list_flags_endpoint(
         )
 
     return list_flags(db, target_type=target_type, target_id=target_id)
+
+
+@router.delete("/{flag_id}")
+def delete_flag_endpoint(
+    flag_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="admin only"
+        )
+
+    if not delete_flag(db, flag_id=flag_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="flag not found"
+        )
+
+    return {"detail": "flag removed"}
