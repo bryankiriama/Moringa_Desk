@@ -198,45 +198,74 @@ const AdminDashboard = () => {
       .slice(0, 5);
   }, [questionDetails]);
 
-  const studentActivity = useMemo(() => {
-    if (users.length === 0) {
-      return [];
+  const activitySeries = useMemo(() => {
+    const days = 14;
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    const start = new Date(end);
+    start.setDate(end.getDate() - (days - 1));
+    start.setHours(0, 0, 0, 0);
+
+    const labels: string[] = [];
+    const questionCounts = Array.from({ length: days }, () => 0);
+    const answerCounts = Array.from({ length: days }, () => 0);
+
+    for (let i = 0; i < days; i += 1) {
+      const current = new Date(start);
+      current.setDate(start.getDate() + i);
+      labels.push(
+        current.toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        })
+      );
     }
-    const questionMap = new Map<string, number>();
-    const answerMap = new Map<string, number>();
-    const voteMap = new Map<string, number>();
+
+    const indexForDate = (value: string) => {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return null;
+      const diff = date.getTime() - start.getTime();
+      const index = Math.floor(diff / (1000 * 60 * 60 * 24));
+      if (index < 0 || index >= days) return null;
+      return index;
+    };
 
     questions.forEach((question) => {
-      questionMap.set(question.author_id, (questionMap.get(question.author_id) ?? 0) + 1);
-      voteMap.set(
-        question.author_id,
-        (voteMap.get(question.author_id) ?? 0) + (question.vote_score ?? 0)
-      );
+      const index = indexForDate(question.created_at);
+      if (index !== null) {
+        questionCounts[index] += 1;
+      }
     });
 
-    questionDetails.forEach((item) => {
-      item.answers.forEach((answer) => {
-        answerMap.set(answer.author_id, (answerMap.get(answer.author_id) ?? 0) + 1);
-        voteMap.set(
-          answer.author_id,
-          (voteMap.get(answer.author_id) ?? 0) + (answer.vote_score ?? 0)
-        );
+    questionDetails.forEach((detail) => {
+      detail.answers.forEach((answer) => {
+        const index = indexForDate(answer.created_at);
+        if (index !== null) {
+          answerCounts[index] += 1;
+        }
       });
     });
 
-    return users
-      .map((user) => ({
-        id: user.id,
-        name: user.full_name,
-        email: user.email,
-        role: user.role,
-        questions: questionMap.get(user.id) ?? 0,
-        answers: answerMap.get(user.id) ?? 0,
-        votes: voteMap.get(user.id) ?? 0,
-      }))
-      .filter((user) => user.role === "student")
-      .sort((a, b) => b.questions + b.answers - (a.questions + a.answers));
-  }, [users, questions, questionDetails]);
+    return { labels, questionCounts, answerCounts };
+  }, [questions, questionDetails]);
+
+  const activityMax = Math.max(
+    1,
+    ...activitySeries.questionCounts,
+    ...activitySeries.answerCounts
+  );
+
+  const linePath = (values: number[], width: number, height: number) => {
+    if (values.length === 0) return "";
+    const step = width / (values.length - 1 || 1);
+    return values
+      .map((value, index) => {
+        const x = index * step;
+        const y = height - (value / activityMax) * height;
+        return `${index === 0 ? "M" : "L"}${x},${y}`;
+      })
+      .join(" ");
+  };
 
   const metrics: MetricCardData[] = [
     {
@@ -398,42 +427,104 @@ const AdminDashboard = () => {
         </SectionCard>
       </section>
 
-      <SectionCard
-        title="Student Activity"
-        subtitle="All students with questions, answers, and votes"
-      >
-        {usersStatus === "loading" || usersStatus === "idle" ? (
-          <EmptyState title="Loading students..." description="Fetching user activity." />
-        ) : usersError ? (
-          <EmptyState title="Unable to load students" description={usersError} />
-        ) : studentActivity.length === 0 ? (
-          <EmptyState
-            title="No student activity yet"
-            description="Once students post questions and answers, activity will appear here."
-          />
+      <SectionCard title="Activity Timeline" subtitle="All student questions and answers">
+        {questionsStatus === "loading" || statsStatus === "loading" ? (
+          <EmptyState title="Loading activity..." description="Fetching timeline data." />
+        ) : questionsStatus === "failed" ? (
+          <EmptyState title="Unable to load activity" description="Try again." />
         ) : (
-          <div className="overflow-x-auto">
-            <div className="min-w-[640px] space-y-3">
-              <div className="grid grid-cols-[2fr,1fr,1fr,1fr] gap-4 text-xs uppercase tracking-wide text-slate-400">
-                <span>Student</span>
-                <span>Questions</span>
-                <span>Answers</span>
-                <span>Votes</span>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="relative h-64 w-full">
+              <svg viewBox="0 0 600 260" className="h-full w-full" aria-hidden>
+                <defs>
+                  <linearGradient id="adminLineBlue" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="#6366f1" stopOpacity="0.4" />
+                    <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+                  </linearGradient>
+                  <linearGradient id="adminLineGreen" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
+                    <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                {[0, 1, 2, 3].map((row) => (
+                  <line
+                    key={row}
+                    x1="0"
+                    x2="600"
+                    y1={20 + row * 60}
+                    y2={20 + row * 60}
+                    stroke="#e2e8f0"
+                    strokeDasharray="4 6"
+                  />
+                ))}
+                <path
+                  d={`${linePath(activitySeries.questionCounts, 600, 240)} L600 240 L0 240 Z`}
+                  fill="url(#adminLineBlue)"
+                />
+                <path
+                  d={`${linePath(activitySeries.answerCounts, 600, 240)} L600 240 L0 240 Z`}
+                  fill="url(#adminLineGreen)"
+                />
+                <path
+                  d={linePath(activitySeries.questionCounts, 600, 240)}
+                  fill="none"
+                  stroke="#4f46e5"
+                  strokeWidth="3"
+                />
+                <path
+                  d={linePath(activitySeries.answerCounts, 600, 240)}
+                  fill="none"
+                  stroke="#0d9488"
+                  strokeWidth="3"
+                />
+                {activitySeries.questionCounts.map((value, index) => {
+                  const step =
+                    600 / (activitySeries.questionCounts.length - 1 || 1);
+                  const x = index * step;
+                  const y = 240 - (value / activityMax) * 240;
+                  return (
+                    <circle
+                      key={`q-${index}`}
+                      cx={x}
+                      cy={y}
+                      r="5"
+                      fill="#4f46e5"
+                    />
+                  );
+                })}
+                {activitySeries.answerCounts.map((value, index) => {
+                  const step =
+                    600 / (activitySeries.answerCounts.length - 1 || 1);
+                  const x = index * step;
+                  const y = 240 - (value / activityMax) * 240;
+                  return (
+                    <circle
+                      key={`a-${index}`}
+                      cx={x}
+                      cy={y}
+                      r="5"
+                      fill="#0d9488"
+                    />
+                  );
+                })}
+              </svg>
+              <div className="absolute inset-x-0 bottom-0 flex justify-between px-2 text-xs text-slate-400">
+                {activitySeries.labels.map((label, index) =>
+                  index % 3 === 0 || index === activitySeries.labels.length - 1 ? (
+                    <span key={label}>{label}</span>
+                  ) : (
+                    <span key={label} />
+                  )
+                )}
               </div>
-              {studentActivity.map((student) => (
-                <div
-                  key={student.id}
-                  className="grid grid-cols-[2fr,1fr,1fr,1fr] items-center gap-4 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm"
-                >
-                  <div>
-                    <p className="font-semibold text-slate-900">{student.name}</p>
-                    <p className="text-xs text-slate-500">{student.email}</p>
-                  </div>
-                  <span className="text-slate-700">{student.questions}</span>
-                  <span className="text-slate-700">{student.answers}</span>
-                  <span className="text-slate-700">{student.votes}</span>
-                </div>
-              ))}
+            </div>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500">
+              <span className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-indigo-500" /> Questions
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" /> Answers
+              </span>
             </div>
           </div>
         )}
