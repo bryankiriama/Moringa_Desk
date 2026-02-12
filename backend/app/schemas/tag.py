@@ -12,5 +12,6 @@ class TagOut(BaseModel):
     id: uuid.UUID
     name: str
     created_at: datetime
+    usage_count: int = 0
 
     model_config = ConfigDict(from_attributes=True)

@@ -1,6 +1,7 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from backend.app.models.question_tag import QuestionTag
 from backend.app.models.tag import Tag
 
 
@@ -22,6 +23,25 @@ def get_tag_by_name(session: Session, *, name: str) -> Tag | None:
     return session.scalars(stmt).first()
 
 
-def list_tags(session: Session) -> list[Tag]:
-    stmt = select(Tag).order_by(Tag.name.asc())
-    return list(session.scalars(stmt).all())
+def list_tags(session: Session) -> list[dict]:
+    stmt = (
+        select(
+            Tag.id,
+            Tag.name,
+            Tag.created_at,
+            func.count(QuestionTag.question_id).label("usage_count"),
+        )
+        .outerjoin(QuestionTag, Tag.id == QuestionTag.tag_id)
+        .group_by(Tag.id)
+        .order_by(Tag.name.asc())
+    )
+    rows = session.execute(stmt).all()
+    return [
+        {
+            "id": row.id,
+            "name": row.name,
+            "created_at": row.created_at,
+            "usage_count": int(row.usage_count or 0),
+        }
+        for row in rows
+    ]
