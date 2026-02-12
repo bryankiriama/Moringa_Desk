@@ -68,8 +68,13 @@ def forgot_password_endpoint(
     if user is not None:
         token = create_reset_token(db, user=user)
         print(f"Password reset token for {payload.email}: {token}")
+        return {
+            "detail": "email found",
+            "email_exists": True,
+            "reset_token": token,
+        }
 
-    return {"detail": "if the email exists, a reset link will be sent"}
+    return {"detail": "email not found", "email_exists": False, "reset_token": None}
 
 
 @router.post("/reset-password")

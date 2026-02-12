@@ -23,6 +23,12 @@ export type ForgotPasswordRequest = {
   email: string;
 };
 
+export type ForgotPasswordResponse = {
+  detail: string;
+  email_exists: boolean;
+  reset_token: string | null;
+};
+
 export type ResetPasswordRequest = {
   token: string;
   new_password: string;
@@ -38,8 +44,14 @@ export const register = async (payload: RegisterRequest): Promise<TokenResponse>
   return response.data;
 };
 
-export const forgotPassword = async (payload: ForgotPasswordRequest): Promise<void> => {
-  await apiClient.post("/auth/forgot-password", payload);
+export const forgotPassword = async (
+  payload: ForgotPasswordRequest
+): Promise<ForgotPasswordResponse> => {
+  const response = await apiClient.post<ForgotPasswordResponse>(
+    "/auth/forgot-password",
+    payload
+  );
+  return response.data;
 };
 
 export const resetPassword = async (payload: ResetPasswordRequest): Promise<void> => {
