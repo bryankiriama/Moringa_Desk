@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.app.core.config import Settings
 from backend.app.api.admin_users import router as admin_users_router
 from backend.app.api.admin_content import router as admin_content_router
 from backend.app.api.answers import router as answers_router
@@ -22,6 +23,11 @@ from backend.app.db.session import engine
 from backend.app import models  # noqa: F401
 
 app = FastAPI(title="Moringa Desk API")
+settings = Settings()
+
+
+def _parse_cors_origins(value: str) -> list[str]:
+    return [origin.strip() for origin in value.split(",") if origin.strip()]
 
 Base.metadata.create_all(bind=engine)
 
@@ -40,10 +46,7 @@ if "faqs" in inspector.get_table_names():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=_parse_cors_origins(settings.cors_origins),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
