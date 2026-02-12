@@ -131,7 +131,8 @@ const AdminTags = () => {
                 <div className="flex items-center gap-3">
                   <TagChip label={tag.name} />
                   <span className="text-sm text-slate-500">
-                    Used in N/A questions
+                    Used in {tag.usage_count}{" "}
+                    {tag.usage_count === 1 ? "question" : "questions"}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-slate-400">

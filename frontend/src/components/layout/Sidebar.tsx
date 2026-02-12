@@ -10,7 +10,6 @@ import {
   LogOut,
   MessageSquare,
   PlusCircle,
-  Settings,
   Tag,
   TrendingUp,
   Users,
@@ -139,11 +138,6 @@ const adminItems: SidebarItem[] = [
     to: "/admin/flags",
     match: ["/admin/flags"],
     icon: <Lock className="h-5 w-5" />,
-  },
-  {
-    label: "Settings",
-    disabledReason: "Coming soon",
-    icon: <Settings className="h-5 w-5" />,
   },
 ];
 
