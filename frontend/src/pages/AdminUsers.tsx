@@ -152,8 +152,8 @@ const AdminUsers = () => {
                       <option value="admin">Admin</option>
                     </select>
                   </div>
-                  <span className="text-slate-600">N/A</span>
-                  <span className="text-slate-600">N/A</span>
+                  <span className="text-slate-600">{user.questions_count}</span>
+                  <span className="text-slate-600">{user.answers_count}</span>
                   <div className="flex items-center gap-3 text-slate-400">
                     <button
                       type="button"

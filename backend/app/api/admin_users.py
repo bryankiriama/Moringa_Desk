@@ -1,11 +1,13 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from backend.app.core.deps import get_current_user
 from backend.app.db.session import get_db
+from backend.app.models.answer import Answer
+from backend.app.models.question import Question
 from backend.app.models.user import User
 from backend.app.repositories.admin_content_repo import delete_user_content
 from backend.app.repositories.user_repo import delete_user
@@ -27,8 +29,38 @@ def list_users_endpoint(
     current_user: User = Depends(get_current_user),
 ) -> list[UserOut]:
     _ensure_admin(current_user)
-    stmt = select(User).order_by(User.created_at.desc())
-    return list(db.scalars(stmt).all())
+    users = list(db.scalars(select(User).order_by(User.created_at.desc())).all())
+
+    question_counts = {
+        row.author_id: row.count
+        for row in db.execute(
+            select(Question.author_id, func.count(Question.id).label("count")).group_by(
+                Question.author_id
+            )
+        ).all()
+    }
+    answer_counts = {
+        row.author_id: row.count
+        for row in db.execute(
+            select(Answer.author_id, func.count(Answer.id).label("count")).group_by(
+                Answer.author_id
+            )
+        ).all()
+    }
+
+    return [
+        UserOut(
+            id=user.id,
+            email=user.email,
+            full_name=user.full_name,
+            role=user.role,
+            questions_count=int(question_counts.get(user.id, 0)),
+            answers_count=int(answer_counts.get(user.id, 0)),
+            created_at=user.created_at,
+            updated_at=user.updated_at,
+        )
+        for user in users
+    ]
 
 
 @router.patch("/{user_id}", response_model=UserOut)
