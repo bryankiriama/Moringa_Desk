@@ -22,6 +22,7 @@ const filters: TagChipData[] = [
 type TagLoadStatus = "idle" | "loading" | "succeeded" | "failed";
 
 const QuestionsList = () => {
+  const PAGE_SIZE = 10;
   const dispatch = useAppDispatch();
   const { items, status, error } = useAppSelector(selectQuestions);
   const { status: voteStatus, error: voteError } = useAppSelector(selectVotes);
@@ -32,6 +33,7 @@ const QuestionsList = () => {
   const [tagError, setTagError] = useState<string | null>(null);
   const [tags, setTags] = useState<Tag[]>([]);
   const [activeTag, setActiveTag] = useState<string>("All");
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     let mounted = true;
@@ -64,6 +66,10 @@ const QuestionsList = () => {
       dispatch(fetchQuestions({ tag: activeTag }));
     }
   }, [activeTag, dispatch]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTag, items.length]);
 
   const tagFilters: TagChipData[] = useMemo(() => {
     const base = [{ label: "All", active: activeTag === "All" }];
@@ -157,6 +163,11 @@ const QuestionsList = () => {
     action: renderActions(question.id),
   }));
 
+  const totalPages = Math.max(1, Math.ceil(questionCards.length / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = (safeCurrentPage - 1) * PAGE_SIZE;
+  const paginatedCards = questionCards.slice(startIndex, startIndex + PAGE_SIZE);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -211,7 +222,7 @@ const QuestionsList = () => {
         />
       ) : (
         <div className="space-y-5">
-          {questionCards.map((question) => (
+          {paginatedCards.map((question) => (
             <QuestionCard
               key={question.question.id}
               {...question}
@@ -228,9 +239,15 @@ const QuestionsList = () => {
         </p>
       ) : null}
 
-      <div className="flex items-center justify-center">
-        <Pagination currentPage={1} totalPages={3} />
-      </div>
+      {questionCards.length > PAGE_SIZE ? (
+        <div className="flex items-center justify-center">
+          <Pagination
+            currentPage={safeCurrentPage}
+            totalPages={totalPages}
+            onPageChange={(page) => setCurrentPage(page)}
+          />
+        </div>
+      ) : null}
 
     </div>
   );
